@@ -44,11 +44,11 @@ transformed parameters {
 
 
       //additional variabels
-      matrix [Nsubjects,Ntrials] log_lik;
+      vector[1] log_like;
+      vector[1] log_like_individual;
       vector<lower=0, upper=1>[Narms] Qcard;
 
 //preassignment
-
       //Scale matrix for individual level parameters
       //specifically we are intrested in getting a sigma matrix we is the covariance matrix that is used to sample
       //the model parameters from a multivariate normal in the "model" block for stan
@@ -56,9 +56,7 @@ transformed parameters {
       //and convert them to the sigma_matrix (covariance matrix)
       sigma_matrix = diag_pre_multiply(tau, (L_Omega*L_Omega')); //L_Omega*L_omega' give us Omega (the corr matrix). 
       sigma_matrix = diag_post_multiply(sigma_matrix, tau);     // diag(tau)*omega*diag(tau) gives us sigma_matirx (the cov matrix)
-      
-      log_lik=rep_matrix(0,Nsubjects,Ntrials);
-      
+          
       
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,23 +68,22 @@ transformed parameters {
         alpha[subject]              = inv_logit(auxiliary_parameters[subject][1]);
         beta[subject]               = exp(auxiliary_parameters[subject][2]);
         
-        //pre-assignment of Qvalues
-        for (a in 1:Narms)   Qcard[a]    = 0;
-
+        //pre-assignment per individual
+        Qcard   =rep_vector(0,Narms);
+        log_like_individual=0;
 
         //trial by trial loop
-        
-        for (trial in 1:Ntrials_per_subject[subject]){
+         for (trial in 1:Ntrials_per_subject[subject]){
             
-  
-
             //liklihood function (softmax)
-            log_lik[subject,trial]=log_softmax(Qcard*beta[subject])[action[subject,trial]];
+            log_like_individual+=log_softmax(Qcard*beta[subject])[action[subject,trial]];
 
             //Qvalues update
             Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);
             
         } 
+   log_like+=log_like_individual;
+
   }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +98,7 @@ model {
   // indvidual level priors (subject parameters)
   auxiliary_parameters ~ multi_normal(mu, sigma_matrix);
 
-  target += sum(log_lik);
+  target += log_like;
 
 }
 
