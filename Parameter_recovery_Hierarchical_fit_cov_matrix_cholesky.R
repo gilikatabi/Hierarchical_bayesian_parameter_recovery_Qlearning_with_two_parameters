@@ -7,23 +7,18 @@ library("truncnorm")
 library(parallel)
 library(gtools) #inv.logit function 
 library(MASS)
+library(dplyr)
 
 
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-source('sim_Narmed_bandit.R')
-rndwlk<-read.csv('rndwlk_4frc_1000trials.csv',header=F)
-
-#generate parameters and data for N agents. 
-Nsubj =10       #number of agents
-Nalt  =4         #number of alternatives
-Ntrl  =300       #number of trials
-Nparam=2         #number of parameters
+Nsubjects =20       #number of agents
 
 #population parameters
 alpha_mu     =0.5
 beta_mu      =5
+Nparam=2
 
 #population aux parameters
 alpha_aux_mu    = logit(alpha_mu)
@@ -45,7 +40,7 @@ L_Omega=t(chol(Omega))         #cor to cholesky
 round(t(L_Omega) %*% L_Omega,1)#cholesky back to cor
 
 # sample aux parameters from the population with mu_vecto and cov matrix (sigma_matrix)
-auxiliary_parameters = mvrnorm(n = Nsubj, mu = mu_vector, Sigma = sigma_matrix)
+auxiliary_parameters = mvrnorm(n = Nsubjects, mu = mu_vector, Sigma = sigma_matrix)
 
 
 #convert auxiliary parameters to true parameters 
@@ -72,35 +67,47 @@ cat(paste('true alpha population parm is', alpha_mu,',  sample mean is',round(me
 # run a simulation study -----------------------------------------------------------
 # simulating N agents in the 2 step task 
 
-df<- lapply(1:Nsubj,function(s)           {
+Nalt  =4         #number of alternatives
+Ntrials  =300       #number of trials
+source('sim_Narmed_bandit.R')
+rndwlk<-read.csv('rndwlk_4frc_1000trials.csv',header=F)
+
+
+df<- lapply(1:Nsubjects,function(s)           {
                       
-                      df_subj=cbind(subj=rep(s,Ntrl),
-                                    trial=(1:Ntrl),
-                                    sim.block(Ntrl,Nalt,true.parms[s,1],true.parms[s,2],rndwlk))
+                      df_subj=cbind(subject=rep(s,Ntrials),
+                                    trial=(1:Ntrials),
+                                    sim.block(Ntrials,Nalt,true.parms[s,1],true.parms[s,2],rndwlk))
                       })
 
 df<-do.call(rbind,df)
 
+# prepare stan data ---------------------------------------
 
+# add abort column to simulate missing trials 
+max_precent_of_aborted_trials=0.1
+df$abort<-0
+for (subject in seq(1:Nsubjects)){
+  
+  index_abort           =sample(which(df$subject==subject),runif(1,min=0,max=max_precent_of_aborted_trials)*Ntrials)  #index of rows to abort
+  
+  df$abort[index_abort]=1
+}
 
+df%>%group_by(subject)%>%summarise(mean(abort)) #count and omit aborted trials
+df<-df[df$abort==0,]
+df%>%group_by(subject)%>%summarise(mean(abort))
+
+source('make_mystandata.R')
+data_for_stan<-make_mystandata(data=df, 
+                               subject_column      =df$subject,
+                               var_toinclude      =c(
+                                 'action',
+                                 'reward'))
 # parameter recovery with stan --------------------------------------------
 
-#prepare action and reward matrices (subject x trial)
-a1=t(sapply(1:Nsubj,function(subj) {df[df$subj==subj,'action']}))
-reward=t(sapply(1:Nsubj,function(subj) {df[df$subj==subj,'reward']}))
-
-#prepare data
-model_data <- list(Nsubj = Nsubj,
-                   Ntrials = Ntrl,
-                   Narms = Nalt,
-                   a1 = a1,
-                   reward = reward,
-                   Nparam = Nparam
-                   )
-        
 #fit stan model   
-rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", data=model_data, iter=2000,chains=6,cores =6) #iter - number of MCMC samples 
-<<<<<<< HEAD
+
 start_time <- Sys.time()
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
               data=data_for_stan, 
@@ -108,16 +115,14 @@ rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan",
               chains=4,
               cores =4) 
 end_time <- Sys.time()
+
 end_time-start_time
 
 #first run: 4 cores, 4 chains, Time difference of 5.888444 mins
 #second run: 4 cores, 4 chains, Time difference of 3.35554 mins
-=======
->>>>>>> parent of bbdeba3 (a working version of param recovery before trying to optimise)
+
 
 print(rl_fit)
-rl_fit<-readRDS('fit.rds')
-
 
 # compare recovered parameters to true parameters  --------------------------------------------
 
