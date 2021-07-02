@@ -84,7 +84,7 @@ transformed parameters {
             log_lik[subject,trial]=log_softmax(Qcard*beta[subject])[action[subject,trial]];
 
             //Qvalues update
-            Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]];
+            Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);
             
         } 
   }
