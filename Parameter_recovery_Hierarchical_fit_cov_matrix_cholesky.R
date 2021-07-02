@@ -111,9 +111,9 @@ data_for_stan<-make_mystandata(data=df,
 start_time <- Sys.time()
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
               data=data_for_stan, 
-              iter=2000,
-              chains=4,
-              cores =4) 
+              iter=200,
+              chains=1,
+              cores =1) 
 end_time <- Sys.time()
 
 end_time-start_time

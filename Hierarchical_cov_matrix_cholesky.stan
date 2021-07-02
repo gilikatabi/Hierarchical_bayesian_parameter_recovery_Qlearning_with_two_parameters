@@ -44,8 +44,8 @@ transformed parameters {
 
 
       //additional variabels
-      vector[1] log_like;
-      vector[1] log_like_individual;
+      vector[Nsubjects] log_like;
+      vector[Ntrials]   log_like_individual;
       vector<lower=0, upper=1>[Narms] Qcard;
 
 //preassignment
@@ -57,7 +57,7 @@ transformed parameters {
       sigma_matrix = diag_pre_multiply(tau, (L_Omega*L_Omega')); //L_Omega*L_omega' give us Omega (the corr matrix). 
       sigma_matrix = diag_post_multiply(sigma_matrix, tau);     // diag(tau)*omega*diag(tau) gives us sigma_matirx (the cov matrix)
           
-      
+      log_like=rep_vector(0,Nsubjects);
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for (subject in 1:Nsubjects){
@@ -70,19 +70,18 @@ transformed parameters {
         
         //pre-assignment per individual
         Qcard   =rep_vector(0,Narms);
-        log_like_individual=0;
+        log_like_individual=rep_vector(0,Ntrials);
 
         //trial by trial loop
          for (trial in 1:Ntrials_per_subject[subject]){
-            
             //liklihood function (softmax)
-            log_like_individual+=log_softmax(Qcard*beta[subject])[action[subject,trial]];
+            log_like_individual[trial]=log_softmax(Qcard*beta[subject])[action[subject,trial]];
 
             //Qvalues update
             Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);
             
         } 
-   log_like+=log_like_individual;
+   log_like[subject]=sum(log_like_individual);
 
   }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +97,7 @@ model {
   // indvidual level priors (subject parameters)
   auxiliary_parameters ~ multi_normal(mu, sigma_matrix);
 
-  target += log_like;
+  target += sum(log_like);
 
 }
 
