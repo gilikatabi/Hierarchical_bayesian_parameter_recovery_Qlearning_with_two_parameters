@@ -107,6 +107,7 @@ data_for_stan<-make_mystandata(data=df,
 # parameter recovery with stan --------------------------------------------
 
 #fit stan model   
+
 start_time <- Sys.time()
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
               data=data_for_stan, 
@@ -114,6 +115,12 @@ rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan",
               chains=4,
               cores =4) 
 end_time <- Sys.time()
+
+end_time-start_time
+
+#first run: 4 cores, 4 chains, Time difference of 5.888444 mins
+#second run: 4 cores, 4 chains, Time difference of 3.35554 mins
+
 
 print(rl_fit)
 
