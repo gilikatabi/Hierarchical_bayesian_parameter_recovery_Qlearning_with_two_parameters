@@ -112,7 +112,7 @@ end_time <- Sys.time()
 end_time-start_time
 
 #first run: 4 cores, 4 chains, Time difference of 5.888444 mins
-#second run: 4 cores, 4 chains, Time difference of 5.888444 mins
+#second run: 4 cores, 4 chains, Time difference of 3.35554 mins
 >>>>>>> Stashed changes
 
 print(rl_fit)
