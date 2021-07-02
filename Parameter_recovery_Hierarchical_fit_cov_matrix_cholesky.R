@@ -16,7 +16,7 @@ source('sim_Narmed_bandit.R')
 rndwlk<-read.csv('rndwlk_4frc_1000trials.csv',header=F)
 
 #generate parameters and data for N agents. 
-Nsubj =10       #number of agents
+Nsubj =20       #number of agents
 Nalt  =4         #number of alternatives
 Ntrl  =300       #number of trials
 Nparam=2         #number of parameters
@@ -99,7 +99,9 @@ model_data <- list(Nsubj = Nsubj,
                    )
         
 #fit stan model   
+start_time <- Sys.time()
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", data=model_data, iter=2000,chains=6,cores =6) #iter - number of MCMC samples 
+end_time <- Sys.time()
 
 print(rl_fit)
 rl_fit<-readRDS('fit.rds')
