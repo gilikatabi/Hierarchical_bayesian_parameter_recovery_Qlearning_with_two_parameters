@@ -99,7 +99,21 @@ model_data <- list(Nsubj = Nsubj,
                    )
         
 #fit stan model   
+<<<<<<< Updated upstream
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", data=model_data, iter=2000,chains=6,cores =6) #iter - number of MCMC samples 
+=======
+start_time <- Sys.time()
+rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
+              data=data_for_stan, 
+              iter=2000,
+              chains=4,
+              cores =4) 
+end_time <- Sys.time()
+end_time-start_time
+
+#first run: 4 cores, 4 chains, Time difference of 5.888444 mins
+#second run: 4 cores, 4 chains, Time difference of 5.888444 mins
+>>>>>>> Stashed changes
 
 print(rl_fit)
 rl_fit<-readRDS('fit.rds')
@@ -157,45 +171,6 @@ var(true.parms[,1])
 var(alpha_recovered)
 var(true.parms[,2])
 var(beta_recovered)
-
-
-
-##2nd version
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write=TRUE)
-
-my_model<- stan_model(file = "rl_basic.stan") 
-sample <- sampling(object = my_model, data = model_data)
-
-fit <-optimizing(object = my_model, data = model_data)
-#c(fit$par[1],fit$par[2])
-
-
-
-my_model<- stan_model(file = "rl_basic.stan") 
-sample <- sampling(object = my_model, data = model_data)
-
-plot(sample, plotfun = "hist", pars= "alpha")
-plot(sample, plotfun = "hist", pars= "beta")
-
-library("shinystan")
-launch_shinystan(rl_fit)
-
-#calculate cor between true and recovered params
-df.tbl   <-lapply(1:length(Nalt), function(alt) {
-  lapply(1:length(Ntrl), function(trl) {
-    data.frame(Nalt=Nalt[alt],
-               Ntrl=Ntrl[trl],
-               cor.alpha=cor(true.parms$alpha,inv.logit((do.call(rbind,alpha[[alt]][[trl]])))),
-               cor.beta=cor(true.parms$beta,exp((do.call(rbind,beta[[alt]][[trl]])))))
-  })})
-
-df.tbl<-do.call(rbind,lapply(1:length(Nalt), function(alt) {do.call(rbind,df.tbl[[alt]])}))
-
-#print table to file
-df.tbl %>%
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))        
 
 
 
