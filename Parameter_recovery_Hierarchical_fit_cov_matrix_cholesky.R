@@ -99,9 +99,7 @@ model_data <- list(Nsubj = Nsubj,
                    )
         
 #fit stan model   
-<<<<<<< Updated upstream
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", data=model_data, iter=2000,chains=6,cores =6) #iter - number of MCMC samples 
-=======
 start_time <- Sys.time()
 rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
               data=data_for_stan, 
@@ -113,7 +111,6 @@ end_time-start_time
 
 #first run: 4 cores, 4 chains, Time difference of 5.888444 mins
 #second run: 4 cores, 4 chains, Time difference of 3.35554 mins
->>>>>>> Stashed changes
 
 print(rl_fit)
 rl_fit<-readRDS('fit.rds')
