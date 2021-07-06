@@ -25,7 +25,7 @@ alpha_aux_mu    = logit(alpha_mu)
 beta_aux_mu     = log(beta_mu)
 alpha_aux_var = 0.2
 beta_aux_var  = 0.05
-corr_alpha_beta = 0.2
+corr_alpha_beta = 0
 cov_alpha_beta  =sqrt(alpha_aux_var)*sqrt(beta_aux_var)*corr_alpha_beta #cov_xy=sd_x*sd_y*cor_xy
 
 #creat a mean vector and a variance-covariance matrix (i.e., sigma_matrix)
@@ -98,28 +98,30 @@ df%>%group_by(subject)%>%summarise(mean(abort)) #count and omit aborted trials
 df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
+#arrange data for stan in a subject x trial
 source('functions/make_mystandata.R')
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
                                var_toinclude      =c(
                                  'action',
-                                 'reward'))
+                                 'reward'),
+                                 additional_arguments=list(Narms=4))
 # parameter recovery with stan --------------------------------------------
 
 #fit stan model   
 
 start_time <- Sys.time()
-rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta.stan", 
+rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta_withPhi.stan", 
               data=data_for_stan, 
-              iter=200,
-              chains=1,
-              cores =1) 
+              iter=2000,
+              chains=2,
+              cores =2) 
 end_time <- Sys.time()
 
 end_time-start_time
 
-#first run: 4 cores, 4 chains, Time difference of 5.888444 mins
-#second run: 4 cores, 4 chains, Time difference of 3.35554 mins
+#second run: withPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took 1.99min
+#second run: noPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took ??min
 
 
 print(rl_fit)
@@ -127,6 +129,25 @@ print(rl_fit)
 # compare recovered parameters to true parameters  --------------------------------------------
 
         
+#population level (hyperparameter)
+plot(true.parms[,1], (summary(rl_fit , pars=c("alpha"))$summary)[,1])
+plot(true.parms[,2],(summary(rl_fit , pars=c("beta"))$summary)[,1])
+
+#individual level parameters (subjects parameters)
+alpha_individual_recovered=summary(rl_fit , pars=c("alpha"))$summary[,1] 
+beta_individual_recovered=summary(rl_fit , pars=c("beta"))$summary[,1]
+plot(true.parms[,1],(alpha_individual_recovered))
+plot(true.parms[,2],(beta_individual_recovered))
+
+
+y_pred<-summary(rl_fit , pars=c("y_pred"))$summary
+dim(y_pred[,1])
+plot(head(y_pred[,1],1000),df$action[1:1000])
+
+
+
+cor(true.parms,cbind(alpha_individual_recovered,beta_individual_recovered))
+
 #population level (hyperparameter)
 alpha_aux_mu_recovered   = (summary(rl_fit , pars=c("mu[1]"))$summary[,1])
 beta_aux_mu_recovered    = summary(rl_fit , pars=c("mu[2]"))$summary[,1]
