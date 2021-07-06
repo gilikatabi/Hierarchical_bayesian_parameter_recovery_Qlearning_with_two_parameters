@@ -13,7 +13,7 @@ library(dplyr)
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-Nsubjects =20       #number of agents
+Nsubjects =10       #number of agents
 
 #population parameters
 alpha_mu     =0.5
@@ -69,8 +69,8 @@ cat(paste('true alpha population parm is', alpha_mu,',  sample mean is',round(me
 
 Nalt  =4         #number of alternatives
 Ntrials  =300       #number of trials
-source('sim_Narmed_bandit.R')
-rndwlk<-read.csv('rndwlk_4frc_1000trials.csv',header=F)
+source('models/sim_Narmed_bandit.R')
+rndwlk<-read.csv('data/rndwlk_4frc_1000trials.csv',header=F)
 
 
 df<- lapply(1:Nsubjects,function(s)           {
@@ -98,7 +98,7 @@ df%>%group_by(subject)%>%summarise(mean(abort)) #count and omit aborted trials
 df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
-source('make_mystandata.R')
+source('functions/make_mystandata.R')
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
                                var_toinclude      =c(
@@ -109,11 +109,11 @@ data_for_stan<-make_mystandata(data=df,
 #fit stan model   
 
 start_time <- Sys.time()
-rl_fit<- stan(file = "Hierarchical_cov_matrix_cholesky.stan", 
+rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta.stan", 
               data=data_for_stan, 
-              iter=2000,
-              chains=4,
-              cores =4) 
+              iter=200,
+              chains=1,
+              cores =1) 
 end_time <- Sys.time()
 
 end_time-start_time
@@ -164,59 +164,3 @@ beta_individual_recovered=summary(rl_fit , pars=c("beta"))$summary[,1]
 plot(true.parms[,1],(alpha_individual_recovered))
 plot(true.parms[,2],(beta_individual_recovered))
 cor(true.parms,cbind(alpha_individual_recovered,beta_individual_recovered))
-
-#additional
-summary(rl_fit, pars=c("L_Omega"))$summary
-sigma_matrix_recovered=summary(rl_fit, pars=c("sigma_matrix"))$summary[,1]
-
-
-cor(true.parms[,1],true.parms[,2])
-cor(alpha_recovered,beta_recovered)
-var(true.parms[,1])
-var(alpha_recovered)
-var(true.parms[,2])
-var(beta_recovered)
-
-
-
-##2nd version
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write=TRUE)
-
-my_model<- stan_model(file = "rl_basic.stan") 
-sample <- sampling(object = my_model, data = model_data)
-
-fit <-optimizing(object = my_model, data = model_data)
-#c(fit$par[1],fit$par[2])
-
-
-
-my_model<- stan_model(file = "rl_basic.stan") 
-sample <- sampling(object = my_model, data = model_data)
-
-plot(sample, plotfun = "hist", pars= "alpha")
-plot(sample, plotfun = "hist", pars= "beta")
-
-library("shinystan")
-launch_shinystan(rl_fit)
-
-#calculate cor between true and recovered params
-df.tbl   <-lapply(1:length(Nalt), function(alt) {
-  lapply(1:length(Ntrl), function(trl) {
-    data.frame(Nalt=Nalt[alt],
-               Ntrl=Ntrl[trl],
-               cor.alpha=cor(true.parms$alpha,inv.logit((do.call(rbind,alpha[[alt]][[trl]])))),
-               cor.beta=cor(true.parms$beta,exp((do.call(rbind,beta[[alt]][[trl]])))))
-  })})
-
-df.tbl<-do.call(rbind,lapply(1:length(Nalt), function(alt) {do.call(rbind,df.tbl[[alt]])}))
-
-#print table to file
-df.tbl %>%
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))        
-
-
-
-
-
