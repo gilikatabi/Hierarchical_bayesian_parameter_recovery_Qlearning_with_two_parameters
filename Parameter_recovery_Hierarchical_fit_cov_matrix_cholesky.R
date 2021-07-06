@@ -13,7 +13,7 @@ library(dplyr)
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-Nsubjects =20       #number of agents
+Nsubjects =10       #number of agents
 
 #population parameters
 alpha_mu     =0.5
