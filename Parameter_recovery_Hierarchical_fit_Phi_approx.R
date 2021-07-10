@@ -99,11 +99,13 @@ df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
 source('functions/make_mystandata.R')
+
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
                                var_toinclude      =c(
                                  'action',
-                                 'reward'))
+                                 'reward'),
+                                 additional_arguments=list(Narms=4))
 # parameter recovery with stan --------------------------------------------
 
 #fit stan model   
