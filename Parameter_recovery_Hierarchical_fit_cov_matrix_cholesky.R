@@ -13,7 +13,7 @@ library(dplyr)
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-Nsubjects =10       #number of agents
+Nsubjects =50       #number of agents
 
 #population parameters
 alpha_mu     =0.5
@@ -21,8 +21,8 @@ beta_mu      =5
 Nparam=2
 
 #population aux parameters (Phi approximation is like pnorm, qnorm is its inverse)
-alpha_aux_mu    = qnorm(alpha_mu) #logit(alpha_mu)
-beta_aux_mu     = qnorm(beta_mu/10)#log(beta_mu)
+alpha_aux_mu    = logit(alpha_mu)#qnorm(alpha_mu) #
+beta_aux_mu     = log(beta_mu)#qnorm(beta_mu/10)
 alpha_aux_var = 0.2
 beta_aux_var  = 0.05
 corr_alpha_beta = 0
@@ -111,7 +111,7 @@ data_for_stan<-make_mystandata(data=df,
 #fit stan model   
 
 start_time = Sys.time()
-stan_fit    = stan(file = "models/model_Narmed_bandit_alpha_beta_withPhi.stan", 
+stan_fit    = stan(file = "models/model_Narmed_bandit_alpha_beta.stan", 
                   data=data_for_stan, 
                   iter=2000,
                   chains=2,
@@ -124,7 +124,7 @@ end_time-start_time
 #second run: noPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took ??min
 
 parVals <- rstan::extract(stan_fit, permuted = TRUE)
-
+names(parVals)
 
 # exmine model   --------------------------------------------
 library("bayesplot")
