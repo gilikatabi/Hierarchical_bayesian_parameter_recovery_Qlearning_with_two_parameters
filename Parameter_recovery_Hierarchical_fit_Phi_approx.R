@@ -13,7 +13,7 @@ library(dplyr)
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-Nsubjects =10       #number of agents
+Nsubjects =25       #number of agents
 
 #population parameters
 alpha_mu     =0.5
@@ -111,7 +111,7 @@ data_for_stan<-make_mystandata(data=df,
 #fit stan model   
 
 start_time <- Sys.time()
-rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta.stan", 
+rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta_Phi_approx.stan", 
               data=data_for_stan, 
               iter=200,
               chains=1,

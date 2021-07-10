@@ -9,7 +9,7 @@
 #var_toinclude - is a vector of strings with the names of data columns that should be included in the stan data
 #var_tobenamed - is a vector of strings for how to variables should be names according to stan model (in case the data and stan has different names for the same var)
 
-make_mystandata<-function(data, subject_column,var_toinclude,var_tobenamed){
+make_mystandata<-function(data, subject_column,var_toinclude,var_tobenamed,additional_arguments){
   
   #create subjects list (only unique values)
   subjects_list      =unique(subject_column)
@@ -39,8 +39,13 @@ make_mystandata<-function(data, subject_column,var_toinclude,var_tobenamed){
   if (missing(var_tobenamed)==F) {names(mydata)=var_tobenamed}
 
   #add additional variables
+
   mydata=append(list(Nsubjects=length(subjects_list), 
                      Ntrials=max_trials_per_subject,  
                      Ntrials_per_subject=Ntrials_per_subject),
                 mydata)
+  
+  if (missing(additional_arguments)==F) {mydata=append(mydata,additional_arguments)}
+  
+return(mydata)
 }
