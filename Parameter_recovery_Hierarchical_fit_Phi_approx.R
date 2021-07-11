@@ -11,6 +11,7 @@ library(dplyr)
 
 
 
+
 # generate population and subject level parameters -----------------------------------------------------------
 
 Nsubjects =25       #number of agents
@@ -64,6 +65,8 @@ cat(paste('true alpha population parm is', alpha_mu,',  sample mean is',round(me
 
 
 
+
+
 # run a simulation study -----------------------------------------------------------
 # simulating N agents in the 2 step task 
 
@@ -79,8 +82,11 @@ df<- lapply(1:Nsubjects,function(s)           {
                                     trial=(1:Ntrials),
                                     sim.block(Ntrials,Nalt,true.parms[s,1],true.parms[s,2],rndwlk))
                       })
-
 df<-do.call(rbind,df)
+
+
+
+
 
 # prepare stan data ---------------------------------------
 
@@ -106,6 +112,9 @@ data_for_stan<-make_mystandata(data=df,
                                  'action',
                                  'reward'),
                                  additional_arguments=list(Narms=4))
+
+
+
 # parameter recovery with stan --------------------------------------------
 
 #fit stan model   
@@ -113,12 +122,123 @@ data_for_stan<-make_mystandata(data=df,
 start_time <- Sys.time()
 rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta_Phi_approx.stan", 
               data=data_for_stan, 
-              iter=200,
-              chains=1,
-              cores =1) 
+              iter=2000,
+              chains=2,
+              cores =2) 
 end_time <- Sys.time()
 
 end_time-start_time
+
+
+#keep parameters
+parVals <- rstan::extract(stan_fit, permuted = TRUE)
+names(parVals)
+
+# compare recovered parameters to true parameters  --------------------------------------------
+        
+#population level (hyperparameter)
+mean(pnorm(parVals$mu_aux[,1]))
+mean(pnorm(parVals$mu_aux[,2]))*10
+hist(parVals$mu_alpha)
+#individual level parameters (subjects parameters)
+plot(true.parms[,1], apply(parVals$alpha, 2, mean))
+plot(true.parms[,2],apply(parVals$beta, 2, mean))
+
+
+#Visual MCMC diagnostics ---------------------------------------------------------------------
+library("bayesplot")
+library("ggplot2")
+
+library("shinystan")
+launch_shinystan(stan_fit)
+
+#Divergent transitions
+params <- nuts_params(stan_fit)
+posterior <- as.array(stan_fit)
+color_scheme_set("darkgray")
+mcmc_parcoord(stan_fit)
+mcmc_pairs(stan_fit)
+
+#R-hat
+rhats <- rhat(stan_fit)
+color_scheme_set("brightblue") # see help("color_scheme_set")
+mcmc_rhat(rhats)
+
+
+
+
+#posterior predictive check -----------------------------------------------
+library(dplyr)
+dim(parVals$y_pred)
+y_pred_mean=apply(parVals$y_pred, c(2,3), mean)
+dim(y_pred_mean)
+
+# empirical data 
+true_y = array(NA, c(Nsubjects, Ntrials))
+true_y = t(sapply(unique(df$subject),function(subject)   
+          { current_var=df$action[df$subject==subject]
+            c(current_var,rep(-1,Ntrials-sum(df$subject==subject)))}))
+
+## Subject #1
+subject=2
+{
+  plot(true_y[subject, ], type="l", xlab="Trial", ylab="Choice (0 or 1)", yaxt="n")
+  lines(y_pred_mean[subject,], col="red", lty=2)
+  axis(side=2, at = c(0,1) )
+  legend("bottomleft", legend=c("True", "PPC"), col=c("black", "red"), lty=1:2)
+}
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+###ARCH
+
+#second run: withPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took 1.99min
+#second run: noPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took ??min
+stan_fit=rl_fit
+
+
+# exmine model   --------------------------------------------
+
+library("bayesplot")
+library(ggplot2)
+
+#mcmc chains
+traceplot(stan_fit, inc_warmup = TRUE, nrow = 3)
+
+#plot mcmc chains
+color_scheme_set("blue")
+mcmc_trace(stan_fit, pars = c("mu[1]", "mu[2]","mu[3]"), n_warmup=0,
+           facet_args = list(ncol = 1, strip.position = "left"))
+
+plot(stan_fit)
+
+#plot posteriors
+plot_title <- ggtitle("Posterior distributions",
+                      "with medians and 95% intervals")
+mcmc_areas(stan_fit,
+           pars = c("mu[2]"),
+           prob = 0.95) + plot_title
+
+       extract_ic(stan_fit, ic = "looic")$LOOIC$estimates[3,1]
+
+n_chains <- length(stan_fit@stan_args)
+lik=loo::extract_log_lik(stanfit = stan_fit, parameter_name = "log_lik")
+rel_eff = loo::relative_eff(
+                              exp(lik),  
+                              chain_id = rep(1:n_chains, each = nrow(lik) / n_chains),
+                              cores = 2)
+
+LOOIC <- loo::loo(lik, r_eff = rel_eff, cores = 2)
+
+
+
 
 #first run: 4 cores, 4 chains, Time difference of 5.888444 mins
 #second run: 4 cores, 4 chains, Time difference of 3.35554 mins
@@ -130,8 +250,8 @@ print(rl_fit)
 
         
 #population level (hyperparameter)
-alpha_aux_mu_recovered   = (summary(rl_fit , pars=c("mu[1]"))$summary[,1])
-beta_aux_mu_recovered    = summary(rl_fit , pars=c("mu[2]"))$summary[,1]
+alpha_aux_mu_recovered   = (summary(rl_fit , pars=c("mu_alpha"))$summary[,1])
+beta_aux_mu_recovered    = summary(rl_fit , pars=c("mu_beta"))$summary[,1]
 sigma_recovered          = matrix(summary(rl_fit , pars=c("sigma_matrix"))$summary[,1],2,2)
 omega_recovered          = cov2cor(sigma_matrix_recovered)
 
@@ -167,79 +287,4 @@ plot(true.parms[,1],(alpha_individual_recovered))
 plot(true.parms[,2],(beta_individual_recovered))
 cor(true.parms,cbind(alpha_individual_recovered,beta_individual_recovered))
 
-
-
-
-###ARCH
-
-#second run: withPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took 1.99min
-#second run: noPhi, 10 subjects, 300 trials, 2000 iteration, 2 cores, 2 chains, took ??min
-
-parVals <- rstan::extract(stan_fit, permuted = TRUE)
-names(parVals)
-
-# exmine model   --------------------------------------------
-library("bayesplot")
-library(ggplot2)
-
-#mcmc chains
-traceplot(stan_fit, inc_warmup = TRUE, nrow = 3)
-
-#plot mcmc chains
-color_scheme_set("blue")
-mcmc_trace(stan_fit, pars = c("mu[1]", "mu[2]","mu[3]"), n_warmup=0,
-           facet_args = list(ncol = 1, strip.position = "left"))
-
-plot(stan_fit)
-
-#plot posteriors
-plot_title <- ggtitle("Posterior distributions",
-                      "with medians and 95% intervals")
-mcmc_areas(stan_fit,
-           pars = c("mu[2]"),
-           prob = 0.95) + plot_title
-
-       extract_ic(stan_fit, ic = "looic")$LOOIC$estimates[3,1]
-
-n_chains <- length(stan_fit@stan_args)
-lik=loo::extract_log_lik(stanfit = stan_fit, parameter_name = "log_lik")
-rel_eff = loo::relative_eff(
-                              exp(lik),  
-                              chain_id = rep(1:n_chains, each = nrow(lik) / n_chains),
-                              cores = 2)
-
-LOOIC <- loo::loo(lik, r_eff = rel_eff, cores = 2)
-
-
-#posterior predictive check -----------------------------------------------
-library(dplyr)
-dim(parVals$y_pred)
-y_pred_mean=apply(parVals$y_pred, c(2,3), mean)
-dim(y_pred_mean)
-
-# empirical data 
-true_y = array(NA, c(Nsubjects, Ntrials))
-true_y = t(sapply(unique(df$subject),function(subject)   
-          { current_var=df$action[df$subject==subject]
-            c(current_var,rep(-1,Ntrials-sum(df$subject==subject)))}))
-
-## Subject #1
-subject=2
-{
-  plot(true_y[subject, ], type="l", xlab="Trial", ylab="Choice (0 or 1)", yaxt="n")
-  lines(y_pred_mean[subject,], col="red", lty=2)
-  axis(side=2, at = c(0,1) )
-  legend("bottomleft", legend=c("True", "PPC"), col=c("black", "red"), lty=1:2)
-}
-
-
-# compare recovered parameters to true parameters  --------------------------------------------
-        
-#population level (hyperparameter)
-mean(pnorm(parVals$mu_aux[,1]))
-mean(pnorm(parVals$mu_aux[,2]))*10
-hist(parVals$mu_alpha)
-#individual level parameters (subjects parameters)
-plot(true.parms[,1], apply(parVals$alpha, 2, mean))
-plot(true.parms[,2],apply(parVals$beta, 2, mean))
 
