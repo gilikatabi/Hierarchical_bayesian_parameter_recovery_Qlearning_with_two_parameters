@@ -11,6 +11,7 @@ library(dplyr)
 
 
 
+
 # generate population and subject level parameters -----------------------------------------------------------
 
 Nsubjects =25       #number of agents
@@ -64,6 +65,8 @@ cat(paste('true alpha population parm is', alpha_mu,',  sample mean is',round(me
 
 
 
+
+
 # run a simulation study -----------------------------------------------------------
 # simulating N agents in the 2 step task 
 
@@ -79,8 +82,11 @@ df<- lapply(1:Nsubjects,function(s)           {
                                     trial=(1:Ntrials),
                                     sim.block(Ntrials,Nalt,true.parms[s,1],true.parms[s,2],rndwlk))
                       })
-
 df<-do.call(rbind,df)
+
+
+
+
 
 # prepare stan data ---------------------------------------
 
@@ -99,17 +105,25 @@ df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
 source('functions/make_mystandata.R')
+
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
                                var_toinclude      =c(
                                  'action',
-                                 'reward'))
+                                 'reward'),
+                                 additional_arguments=list(Narms=4))
+
+
+
 # parameter recovery with stan --------------------------------------------
 
 #fit stan model   
 
 start_time <- Sys.time()
-rl_fit<- stan(file = "models/model_Narmed_bandit_alpha_beta_cholesky.stan", 
+models_names=c("models/model_Narmed_bandit_alpha_beta_cholesky.stan",
+               "models/model_Narmed_bandit_alpha_beta_Phi_approx.stan")
+
+rl_fit<- stan(file = models_names[1], 
               data=data_for_stan, 
               iter=2000,
               chains=2,
@@ -118,49 +132,67 @@ end_time <- Sys.time()
 
 end_time-start_time
 
-#first run: 4 cores, 4 chains, Time difference of 5.888444 mins
-#second run: 4 cores, 4 chains, Time difference of 3.35554 mins
 
-
-print(rl_fit)
+#keep parameters
+parVals <- rstan::extract(stan_fit, permuted = TRUE)
+names(parVals)
 
 # compare recovered parameters to true parameters  --------------------------------------------
-
-        
+        parVals$mu_alpha
 #population level (hyperparameter)
-alpha_aux_mu_recovered   = (summary(rl_fit , pars=c("mu[1]"))$summary[,1])
-beta_aux_mu_recovered    = summary(rl_fit , pars=c("mu[2]"))$summary[,1]
-sigma_recovered          = matrix(summary(rl_fit , pars=c("sigma_matrix"))$summary[,1],2,2)
-omega_recovered          = cov2cor(sigma_matrix_recovered)
-
-tau_recovered            =summary(rl_fit , pars=c("tau"))$summary[,1]
-L_Omega_recovered        =matrix(summary(rl_fit , pars=c("L_Omega"))$summary[,1],2,2)
-omega=diag(tau_recovered)*L_Omega_recovered*t(L_Omega_recovered)
-omega*diag(tau_recovered)
-cov2cor(omega*diag(tau_recovered))
-
-
-
-
-#compare recovered to true population parameters
-#location parameters
-cat(paste('true alpha population parm is',     alpha_mu,' sample mean is',    mean(true.parms[,1]),'and recovered is',          inv.logit(alpha_aux_mu_recovered)),
-    paste('true beta population parm is',      beta_mu,' sample mean is',     mean(true.parms[,2]),'and recovered is',          exp(beta_aux_mu_recovered)),
-    paste('true alpha aux population parm is', alpha_aux_mu,' sample mean is',mean(auxiliary_parameters[,1]),'and recovered is',alpha_aux_mu_recovered),
-    paste('true beta aux population parm is',  beta_aux_mu,' sample mean is', mean(auxiliary_parameters[,2]),'and recovered is',beta_aux_mu_recovered),
-    sep = '\n')
-
-#scale parameters
-cat(paste('true alpha aux var parm is',        alpha_aux_var,' sample mean is',  var(auxiliary_parameters[,1]),'and recovered is',alpha_aux_var_recovered),
-    paste('true beta aux var parm is',         beta_aux_var,' sample mean is',   var(auxiliary_parameters[,2]),'and recovered is',beta_aux_var_recovered),
-    paste('true corr between aux parms is',    corr_alpha_beta,' sample mean is',cor(auxiliary_parameters[,1],auxiliary_parameters[,2]),
-      'and recovered is',cov_alpha_beta_recovered/(sqrt(alpha_aux_var_recovered)*sqrt(beta_aux_var_recovered))),
-    sep = '\n')
-
+mean(parVals$mu_alpha)
+mean(parVals$mu_beta)
+hist(parVals$mu_alpha)
+hist(parVals$mu_beta)
 
 #individual level parameters (subjects parameters)
-alpha_individual_recovered=summary(rl_fit , pars=c("alpha"))$summary[,1] 
-beta_individual_recovered=summary(rl_fit , pars=c("beta"))$summary[,1]
-plot(true.parms[,1],(alpha_individual_recovered))
-plot(true.parms[,2],(beta_individual_recovered))
-cor(true.parms,cbind(alpha_individual_recovered,beta_individual_recovered))
+plot(true.parms[,1], apply(parVals$alpha, 2, mean))
+plot(true.parms[,2],apply(parVals$beta, 2, mean))
+
+
+#Visual MCMC diagnostics ---------------------------------------------------------------------
+library("shinystan")
+launch_shinystan(stan_fit)
+
+
+library("bayesplot")
+library("ggplot2")
+
+#Divergent transitions
+params <- nuts_params(stan_fit)
+posterior <- as.array(stan_fit)
+color_scheme_set("darkgray")
+mcmc_parcoord(stan_fit)
+mcmc_pairs(stan_fit)
+
+#R-hat
+rhats <- rhat(stan_fit)
+color_scheme_set("brightblue") # see help("color_scheme_set")
+mcmc_rhat(rhats)
+
+
+
+
+#posterior predictive check -----------------------------------------------
+library(dplyr)
+dim(parVals$y_pred)
+y_pred_mean=apply(parVals$y_pred, c(2,3), mean)
+dim(y_pred_mean)
+
+# empirical data 
+true_y = array(NA, c(Nsubjects, Ntrials))
+true_y = t(sapply(unique(df$subject),function(subject)   
+          { current_var=df$action[df$subject==subject]
+            c(current_var,rep(-1,Ntrials-sum(df$subject==subject)))}))
+
+## Subject #1
+subject=2
+{
+  plot(true_y[subject,1:280 ], type="l", xlab="Trial", ylab="Choice (1 to 4)", yaxt="n")
+  lines(y_pred_mean[subject,1:280], col="red", lty=2)
+  axis(side=2, at = c(1,2,3,4) )
+  legend("bottomleft", legend=c("True", "PPC"), col=c("black", "red"), lty=1:2)
+}
+
+
+
