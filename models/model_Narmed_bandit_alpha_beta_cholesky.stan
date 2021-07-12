@@ -11,6 +11,7 @@ data {
   int<lower = 0> action[Nsubjects,Ntrials];        //index of which arm was pulled coded 1 to 4
   int<lower = 0> reward[Nsubjects,Ntrials];            //outcome of bandit arm pull
 
+
 }
 transformed data{
     int<lower = 1> Nparameters; //number of parameters
