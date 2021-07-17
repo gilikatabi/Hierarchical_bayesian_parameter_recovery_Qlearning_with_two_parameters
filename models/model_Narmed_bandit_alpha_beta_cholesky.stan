@@ -25,24 +25,20 @@ parameters {
   vector[Nparameters] mu;                    //vector with the population level mean for each model parameter
   vector<lower=0>[Nparameters] tau;          //vector of random effects variance for each model parameter
   cholesky_factor_corr[Nparameters] L_Omega; //lower triangle of a correlation matrix to be used for the random effect of the model parameters
-  
-  //subject level parameters
-  vector[Nparameters] auxiliary_parameters[Nsubjects]; 
+  matrix[Nsubjects, Nparameters] z;
 
 }
 
 
 transformed parameters {
-    //population level
-    matrix[Nparameters,Nparameters] sigma_matrix;
 
     //individuals level
+    vector[Nparameters] auxiliary_parameters[Nsubjects]; 
     real alpha[Nsubjects];
     real beta[Nsubjects];
     
-    sigma_matrix = diag_pre_multiply(tau, (L_Omega*L_Omega')); //L_Omega*L_omega' give us Omega (the corr matrix). 
-    sigma_matrix = diag_post_multiply(sigma_matrix, tau);     // diag(tau)*omega*diag(tau) gives us sigma_matirx (the cov matrix)
-      
+    auxiliary_parameters = diag_pre_multiply(tau, L_Omega) * z;  
+
   for (subject in 1:Nsubjects) {
         alpha[subject]              = inv_logit(auxiliary_parameters[subject][1]);
         beta[subject]               = exp(auxiliary_parameters[subject][2]);
@@ -58,10 +54,9 @@ model {
   mu  ~ normal(0, 5);             // mu is a vector 1xNparameters with the population mean (i.e., location) for each model parameter
   tau ~ cauchy(0, 1);             //tau is the hyperparameters variance vector
   L_Omega ~ lkj_corr_cholesky(2); //L_omega is the lower triangle of the correlations. Setting the lkj prior to 2 means the off-diagonals are priored to be near zero
-
-  // indvidual level priors (subject parameters)
-  auxiliary_parameters ~ multi_normal(mu, sigma_matrix);
-
+  to_vector(z) ~ std_normal();
+  
+  
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Likelihood function per subject per trial
