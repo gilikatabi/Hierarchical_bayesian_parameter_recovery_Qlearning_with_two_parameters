@@ -3,7 +3,7 @@
 
 rm(list=ls())
 
-Nsubjects =10        #number of agents
+Nsubjects =25        #number of agents
 
 # generate population and subject level parameters -----------------------------------------------------------
 
@@ -15,7 +15,7 @@ mu=c(
 Nparam=length(mu)
 
 #population scale parameters
-tau          =c(.25,.05) #var vector
+tau          =c(.30,.25) #var vector
 cov_param    =0
 sigma        = diag(tau)
 sigma[!diag(nrow=Nparam)]=cov_param
@@ -31,11 +31,11 @@ psych::multi.hist(true.parameters,density=F,nrow=1)
 
 # generate data -----------------------------------------------------------
 
-cfg = list(Nblocks =4,
-           Ntrials=50,
-           Narms  =4,    
+cfg = list(Nblocks =1,
+           Ntrials=100,
+           Narms  =2,    
            Nraffle=2,  #(i.e., offer Nraffle arms each trial from a deck of Narms)
-           rndwlk =read.csv('models/rndwlk1.csv',header=F)[,1:50])
+           rndwlk =read.csv('data/rndwlk_4frc_1000trials.csv',header=F)[,1:100])
 source('models/simulation_model_null.R')
 
 df=data.frame()

@@ -14,19 +14,19 @@ library(dplyr)
 
 # generate population and subject level parameters -----------------------------------------------------------
 
-Nsubjects =25       #number of agents
+Nsubjects =100       #number of agents
 
 #population parameters
-alpha_mu     =0.5
+alpha_mu     =0.2
 beta_mu      =5
 Nparam=2
 
 #population aux parameters
 alpha_aux_mu    = logit(alpha_mu)
 beta_aux_mu     = log(beta_mu)
-alpha_aux_var = 0.2
-beta_aux_var  = 0.05
-corr_alpha_beta = 0.2
+alpha_aux_var = 0.1
+beta_aux_var  = 0.35
+corr_alpha_beta = 0
 cov_alpha_beta  =sqrt(alpha_aux_var)*sqrt(beta_aux_var)*corr_alpha_beta #cov_xy=sd_x*sd_y*cor_xy
 
 #creat a mean vector and a variance-covariance matrix (i.e., sigma_matrix)
@@ -70,8 +70,8 @@ cat(paste('true alpha population parm is', alpha_mu,',  sample mean is',round(me
 # run a simulation study -----------------------------------------------------------
 # simulating N agents in the 2 step task 
 
-Nalt  =4         #number of alternatives
-Ntrials  =300       #number of trials
+Nalt  =4      #number of alternatives
+Ntrials  =100       #number of trials
 source('models/sim_Narmed_bandit.R')
 rndwlk<-read.csv('data/rndwlk_4frc_1000trials.csv',header=F)
 
@@ -123,7 +123,7 @@ start_time <- Sys.time()
 models_names=c("models/model_Narmed_bandit_alpha_beta_cholesky.stan",
                "models/model_Narmed_bandit_alpha_beta_Phi_approx.stan")
 
-rl_fit<- stan(file = models_names[1], 
+rl_fit<- stan(file = models_names[2], 
               data=data_for_stan, 
               iter=2000,
               chains=2,
@@ -134,7 +134,7 @@ end_time-start_time
 
 
 #keep parameters
-parVals <- rstan::extract(stan_fit, permuted = TRUE)
+parVals <- rstan::extract(rl_fit, permuted = TRUE)
 names(parVals)
 
 # compare recovered parameters to true parameters  --------------------------------------------
@@ -196,3 +196,16 @@ subject=2
 
 
 
+library(loo)
+loo(rl_fit)
+
+
+df<-read.delim('data/bandit2arm_exampleData.txt')
+colnames(df)<-c('subject','trial','action','reward')
+df$reward[df$reward==c(-1)]=0
+
+lik<-extract_log_lik(rl_fit, parameter_name = "log_lik", merge_chains = TRUE) 
+dim(lik)
+hist(apply(lik,1,mean))
+loo1_r_eff <- relative_eff(exp(loo1_loglike_vector), cores = 4)
+loo_1 <- loo(log_lik_1, r_eff = r_eff, cores = 2)
