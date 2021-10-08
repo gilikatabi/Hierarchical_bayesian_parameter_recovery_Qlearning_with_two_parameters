@@ -39,7 +39,7 @@ transformed parameters {
     
   for (subject in 1:Nsubjects) {
     alpha[subject]   = Phi_approx(mu_aux[1]  + sigma_aux[1]  * alpha_individal_aux[subject]);
-    beta[subject] = Phi_approx(mu_aux[2] + sigma_aux[2] * beta_indvidial_aux[subject]) * 10;
+    beta[subject]    = Phi_approx(mu_aux[2] + sigma_aux[2] * beta_indvidial_aux[subject]) * 10;
   }
 
 }

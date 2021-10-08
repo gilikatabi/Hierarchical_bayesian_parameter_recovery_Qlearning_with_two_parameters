@@ -12,45 +12,28 @@ Nraffle   =2
 # generate population and subject level parameters -----------------------------------------------------------
 
 #population location parameters
-  
-  #true population level parameters
-  mu_alpha   =0.4
-  mu_beta    =5
-  beta_range =10 #not a free parameter - this is a pre-defined boundery for beta
-  
-  #transform to aux scale
-  mu_aux     =c(qnorm(mu_alpha),qnorm(mu_beta/beta_range))
-  
-  #transform back to natural scale (just for practice)
-  mu_alpha   =pnorm(mu_aux[1], 0,1);
-  mu_beta    =pnorm(mu_aux[2], 0,1)*beta_range;
-  print(paste(round(mu_alpha,2),round(mu_beta,2)))
-  
-  #scale parameter for the random effect
-  sigma_aux  =c(0.2,0.2) 
+mu=c(
+  alpha        =psych::logit(0.4),
+  beta         =log(3)
+)
+Nparam=length(mu)
 
+#population scale parameters
+tau          =c(2,.25) #var vector
+cov_param    =0
+sigma        = diag(tau)
+sigma[!diag(nrow=Nparam)]=cov_param
 
-#individual level parameters
-  
-  #random effect for each individual
-  alpha_individal_aux=rnorm(Nsubjects,0, 1);
-  beta_indvidial_aux =rnorm(Nsubjects,0, 1);
-  
-  #RL parameters per individual given population and group effects
-  alpha          = pnorm(mu_aux[1]  + sigma_aux*alpha_individal_aux);
-  beta           = pnorm(mu_aux[2]  + sigma_aux*beta_indvidial_aux) * 10;
+# sample aux parameters
+auxiliary_parameters = MASS::mvrnorm(n = Nsubjects, mu = mu, Sigma = sigma)
 
-  #plot true parameters
-  true.parameters=cbind(
-    subject=seq(1,Nsubjects),
-    alpha  =alpha,
-    beta   =beta
-  )
-  psych::multi.hist(true.parameters,density=F,nrow=1)
-
-  #check that sample means is near true population means
-  print(paste(round(mean(alpha),2),round(mean(beta),2)))
-  
+#plot true parameters
+true.parameters=cbind(
+  subject=seq(1,Nsubjects),
+  alpha  =psych::logistic(auxiliary_parameters[,1]),#use "runif(Nsubjects)" in case you want to test uniform alpha
+  beta   =5#exp(auxiliary_parameters[,2])
+)
+psych::multi.hist(true.parameters,density=F,nrow=1)
 
 
 # generate data -----------------------------------------------------------
