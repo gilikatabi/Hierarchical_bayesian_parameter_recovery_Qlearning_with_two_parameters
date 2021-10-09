@@ -36,7 +36,7 @@ df%>%group_by(subject)%>%summarise(mean(abort))
 
 source('functions/make_mystandata.R')
 df$action        =df$choice
-df$selected_offer=(df$choice==df$offer2)*1
+df$selected_offer=(df$choice==df$offer2)*1+1
 
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
@@ -59,13 +59,13 @@ models_names=c("models/model_Narmed_bandit_alpha_beta_Phi_approx.stan")
 
 rl_fit<- stan(file = models_names[1], 
               data=data_for_stan, 
-              iter=20,
-              chains=1,
-              cores =1) 
+              iter=4000,
+              chains=6,
+              cores =6) 
 end_time <- Sys.time()
 
 end_time-start_time
-
+saveRDS(rl_fit, "simulation_20subjects_200trials_4arms_6chains_4000iter.rds")
 
 #keep parameters
 parVals <- rstan::extract(rl_fit, permuted = TRUE)
@@ -112,7 +112,6 @@ summary(rl_fit, pars = mypars, probs = c(0.1, 0.9))$summary
 
 #mcmc hist by chain
 color_scheme_set("brightblue")
-mcmc_hist_by_chain(posterior, pars = mypars)
 mcmc_dens_overlay(posterior, pars = mypars)
 
 #bivariate plots
@@ -123,8 +122,7 @@ mcmc_scatter(posterior, pars = c("mu_alpha", "mu_beta"),
 #trace plots
 color_scheme_set("mix-blue-red")
 mcmc_trace(posterior, pars = mypars,
-           facet_args = list(ncol = 1, strip.position = "left"),
-           n_warmup=100,inc_warmup=T)
+           facet_args = list(ncol = 1, strip.position = "left"))
 
 #R-hat
 rhats <- rhat(rl_fit)
@@ -150,14 +148,20 @@ launch_shinystan(stan_fit)
 #posterior predictive check -----------------------------------------------
 library(dplyr)
 dim(parVals$y_pred)
+hist(parVals$y_pred)
 y_pred_mean=apply(parVals$y_pred, c(2,3), mean)
 y_pred_mean=as.vector(y_pred_mean)
 y_pred_mean[y_pred_mean<0]<-NA
 y_pred_mean<-na.omit(y_pred_mean)
 length(y_pred_mean)
-
+qoffer=parVals$
 # empirical data 
 df$y_rep=as.vector(y_pred_mean)
+df$y_prd=df$y_rep
+df$y_prd[df$selected_offer==1]=(2-df$y_rep[df$selected_offer==1]+1)
+mean(df$y_prd)
+hist(df$y_rep)
+table(df$y_prd,df$selected_offer)
 
 true_y = array(NA, c(Nsubjects, Ntrials))
 true_y = t(sapply(unique(df$subject),function(subject)   

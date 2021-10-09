@@ -95,6 +95,7 @@ generated quantities {
   real log_lik[Nsubjects];
   real y_pred[Nsubjects, Ntrials];
 
+
   // Set all posterior predictions to -1 (avoids NULL values)
   for (i in 1:Nsubjects) {
     for (t in 1:Ntrials) {
@@ -112,6 +113,7 @@ mu_beta=Phi_approx(mu_aux[2])*10;
         vector[Narms] Qcard; 
         vector[Nraffle] Qoffer; 
 
+
         Qcard=Qvalue_initial;
 
         log_lik[subject] = 0;
@@ -122,11 +124,11 @@ mu_beta=Phi_approx(mu_aux[2])*10;
           Qoffer[2]=Qcard[offer2[subject,trial]];
           
         // compute log likelihood of current trial
-        log_lik[subject] += categorical_logit_lpmf(action[subject, trial] | beta[subject] * Qoffer);
+        log_lik[subject] += categorical_logit_lpmf(selected_offer[subject, trial] | beta[subject] * Qoffer);
 
         // generate posterior prediction for current trial
-        y_pred[subject, trial] = categorical_rng(softmax(beta[subject] * Qoffer));
-
+        //y_pred[subject, trial] = categorical_rng(softmax(beta[subject] * Qoffer));
+        y_pred[subject, trial] = softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
  
         //Qvalues update
         Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);      
