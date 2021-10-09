@@ -35,13 +35,18 @@ df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
 source('functions/make_mystandata.R')
-df$action=df$choice
+df$action        =df$choice
+df$selected_offer=(df$choice==df$offer2)*1
+
 data_for_stan<-make_mystandata(data=df, 
                                subject_column      =df$subject,
                                var_toinclude      =c(
+                                 'offer1',
+                                 'offer2',
                                  'action',
-                                 'reward'),
-                                 additional_arguments=list(Narms=4))
+                                 'reward',
+                                 'selected_offer'),
+                                 additional_arguments=list(Narms=4, Nraffle=2))
 
 
 
@@ -54,7 +59,7 @@ models_names=c("models/model_Narmed_bandit_alpha_beta_Phi_approx.stan")
 
 rl_fit<- stan(file = models_names[1], 
               data=data_for_stan, 
-              iter=200,
+              iter=20,
               chains=1,
               cores =1) 
 end_time <- Sys.time()
