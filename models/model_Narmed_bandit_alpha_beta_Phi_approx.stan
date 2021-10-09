@@ -50,7 +50,7 @@ model {
   
   // population level priors (hyper-parameters)
   mu_aux  ~ normal(0, 1);            
-  sigma_aux ~ normal(0, 0.2);        
+  sigma_aux ~ normal(0, 0.5);        
 
   // indvidual level priors (subjects' parameters)
   alpha_individal_aux~ normal(0, 1);
