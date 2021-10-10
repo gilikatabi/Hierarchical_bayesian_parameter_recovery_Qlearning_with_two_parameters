@@ -111,6 +111,39 @@ plot(effect('alpha',model)) #(if you use uniform alpha and fixed beta - you will
 plot(effect('beta',model)) #(if you use uniform alpha - you will be able to see a nice hyperbolic)
 
 
+# prepare stan data ---------------------------------------
+
+# add abort column to simulate missing trials 
+max_precent_of_aborted_trials=0.1
+df$abort<-0
+Nsubjects=max(df$subject)
+Ntrials  =max(df$trial)
+
+for (subject in seq(1:max(df$subject))){
+  index_abort           =sample(which(df$subject==subject),runif(1,min=0,max=max_precent_of_aborted_trials)*Ntrials)  #index of rows to abort
+  df$abort[index_abort] =1
+}
+
+df%>%group_by(subject)%>%summarise(mean(abort)) #count and omit aborted trials
+df<-df[df$abort==0,]
+df%>%group_by(subject)%>%summarise(mean(abort))
+
+source('functions/make_mystandata.R')
+df$action        =df$choice
+df$selected_offer=(df$choice==df$offer2)*1+1
+
+data_for_stan<-make_mystandata(data=df, 
+                               subject_column      =df$subject,
+                               var_toinclude      =c(
+                                 'offer1',
+                                 'offer2',
+                                 'action',
+                                 'reward',
+                                 'selected_offer'),
+                               additional_arguments=list(Narms=4, Nraffle=2))
+
+
 #save-------------------------------------------------------------------
 save(df,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms.Rdata',sep=""))
+save(data_for_stan,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms_standata.Rdata',sep=""))
 save(true.parameters,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms_parameters.Rdata',sep=""))
