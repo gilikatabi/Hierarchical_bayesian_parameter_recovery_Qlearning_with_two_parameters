@@ -3,7 +3,7 @@
 
 rm(list=ls())
 
-Nsubjects =20        #number of agents
+Nsubjects =50        #number of agents
 Ntrials   =200
 Narms     =4
 rndwlk    =read.csv('data/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials]

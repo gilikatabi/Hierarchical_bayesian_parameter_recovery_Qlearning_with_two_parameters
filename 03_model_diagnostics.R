@@ -34,9 +34,11 @@ hist(parVals$mu_beta)
 
 
 #compare true vs fitted group level parameters (that is - subjects parameters since subject is a "group" in the hierarchical model)
-load('data/simulation_20subjects_200trials_4arms_parameters.Rdata')
+load('data/simulation_50subjects_200trials_4arms_parameters.Rdata')
 plot(true.parameters[,'alpha'], apply(parVals$alpha, 2, mean))
 plot(true.parameters[,'beta'],apply(parVals$beta, 2, mean))
+cor(true.parameters[,'alpha'], apply(parVals$alpha, 2, mean))
+cor(true.parameters[,'beta'],apply(parVals$beta, 2, mean))
 
 
 
