@@ -9,14 +9,18 @@
 #var_toinclude - is a vector of strings with the names of data columns that should be included in the stan data
 #var_tobenamed - is a vector of strings for how to variables should be names according to stan model (in case the data and stan has different names for the same var)
 
-make_mystandata<-function(data, subject_column,var_toinclude,var_tobenamed,additional_arguments){
+make_mystandata<-function(data, subject_column,block_column,var_toinclude,var_tobenamed,additional_arguments){
   
+
   #create subjects list (only unique values)
   subjects_list      =unique(subject_column)
+  blocks_list        =unique(block_column)
   
   #create an Ntrials_per_subject vector showing the number of trials for each subject
+  Ntrials_per_subject           =sapply(1:length(subjects_list), function(i) {sum(subject_column==subjects_list[i])})
   
-  Ntrials_per_subject=sapply(1:length(subjects_list), function(i) {sum(subject_column==subjects_list[i])})
+  Ntrials_per_subject_per_block =sapply(1:length(blocks_list), function(j) {
+                                    sapply(1:length(subjects_list), function(i) {sum(subject_column==subjects_list[i] & block_column==j)})})
   
   #find the largest number of available data per subject
   max_trials_per_subject=max(Ntrials_per_subject)
@@ -40,9 +44,11 @@ make_mystandata<-function(data, subject_column,var_toinclude,var_tobenamed,addit
 
   #add additional variables
 
-  mydata=append(list(Nsubjects=length(subjects_list), 
-                     Ntrials=max_trials_per_subject,  
-                     Ntrials_per_subject=Ntrials_per_subject),
+  mydata=append(list(Nsubjects                    =length(subjects_list), 
+                     Nblocks                      =length(blocks_list),
+                     Ntrials                      =max_trials_per_subject,  
+                     Ntrials_per_subject          =Ntrials_per_subject,
+                     Ntrials_per_subject_per_block=Ntrials_per_subject_per_block),
                 mydata)
   
   if (missing(additional_arguments)==F) {mydata=append(mydata,additional_arguments)}

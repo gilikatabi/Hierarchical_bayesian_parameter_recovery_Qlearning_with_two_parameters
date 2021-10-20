@@ -1,24 +1,29 @@
 #### simulate Rescorla-Wagner block for participant ----
 sim.block = function(subject,parameters,cfg){ 
   print(paste('subject',subject))
-#preallocation
+  
+#pre-allocation
+  
   #set parameters
   alpha = parameters['alpha']
   beta  = parameters['beta']
 
   #set initial var
-  Narms     = cfg$Narms
-  Nraffle   = cfg$Nraffle
-  Nblocks   = cfg$Nblocks
-  Ntrials   = cfg$Ntrials
-  expvalues = cfg$rndwlk
+  Narms              = cfg$Narms
+  Nraffle            = cfg$Nraffle
+  Nblocks            = cfg$Nblocks
+  Ntrials_perblock   = cfg$Ntrials_perblock
+  expvalues          = cfg$rndwlk
   rownames(expvalues)=c('ev1','ev2','ev3','ev4')
-  Qval      = as.matrix(t(rep(0,Narms)))
-  colnames(Qval)=sapply(1:Narms, function(n) {paste('Qbandit',n,sep="")})
-  df     =data.frame()
+  Qval               = as.matrix(t(rep(0,Narms)))
+  colnames(Qval)     =sapply(1:Narms, function(n) {paste('Qbandit',n,sep="")})
+  df                 =data.frame()
   
 for (block in 1:Nblocks){
-  for (trial in 1:Ntrials){
+  
+  Qval      = as.matrix(t(rep(0.5,Narms)))
+  
+  for (trial in 1:Ntrials_perblock){
 
     #computer offer
     raffle    = sample(1:Narms,Nraffle,prob=rep(1/Narms,Narms)) 

@@ -3,31 +3,37 @@
 
 rm(list=ls())
 
-Nsubjects =50        #number of agents
-Ntrials   =200
-Narms     =4
-rndwlk    =read.csv('data/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials]
-Nraffle   =2
+model_name=c('null')
+
+Nsubjects           =100        
+Nblocks             =4
+Ntrials_perblock    =50
+Ntrials             =Nblocks*Ntrials
+Narms               =4
+rndwlk              =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials_perblock]
+Nraffle             =2
+
 
 # generate population and subject level parameters -----------------------------------------------------------
 
 #population location parameters
   
   #true population level parameters
-  mu_alpha   =0.4
+  mu_alpha   =0.5
   mu_beta    =4
-  beta_range =10 #not a free parameter - this is a pre-defined boundery for beta
   
   #transform to aux scale
+  beta_range =10
   mu_aux     =c(qnorm(mu_alpha),qnorm(mu_beta/beta_range))
   
   #transform back to natural scale (just for practice)
   mu_alpha   =pnorm(mu_aux[1], 0,1);
   mu_beta    =pnorm(mu_aux[2], 0,1)*beta_range;
+  
   print(paste(round(mu_alpha,2),round(mu_beta,2)))
   
   #scale parameter for the random effect
-  sigma_aux  =c(0.4,0.4) 
+  sigma_aux  =c(0.75,1) 
 
 
 #individual level parameters
@@ -38,7 +44,7 @@ Nraffle   =2
   
   #RL parameters per individual given population and group effects
   alpha          = pnorm(mu_aux[1]  + sigma_aux*alpha_individal_aux);
-  beta           = pnorm(mu_aux[2]  + sigma_aux*beta_indvidial_aux) * 10;
+  beta           = pnorm(mu_aux[2]  + sigma_aux*beta_indvidial_aux) * beta_range;
 
   #plot true parameters
   true.parameters=cbind(
@@ -55,13 +61,13 @@ Nraffle   =2
 
 # generate data -----------------------------------------------------------
 
-cfg = list(Nblocks =1,
-           Ntrials=Ntrials,
-           Narms  =Narms,    
-           Nraffle=Nraffle,  #(i.e., offer Nraffle arms each trial from a deck of Narms)
-           rndwlk =read.csv('data/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials])
+cfg = list(Nblocks         =Nblocks,
+           Ntrials_perblock=Ntrials_perblock,
+           Narms           =Narms,    
+           Nraffle         =Nraffle,  #(i.e., offer Nraffle arms each trial from a deck of Narms)
+           rndwlk          =rndwlk)
 
-source('models/simulation_Narmed_bandit_task.R')
+source('./models/simulation_Narmed_bandit_task.R')
 
 df=data.frame()
 for (subject in 1:Nsubjects) {
@@ -70,54 +76,19 @@ for (subject in 1:Nsubjects) {
 
   
 
-#check simulated data -----------------------------------------------------------
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(lme4)
-library(effects)
-
-#sanity check 1: plot mean reward vs expected value
-  model<-glmer(reward ~ expval_ch+(1| subject),data = df, family = binomial)
-  plot(effect('expval_ch',model))
-
-  
-#sanity check 2: pStay model-agnostic analysis
-  df=df%>%mutate(stay=(choice==lag(choice,default=0))*1,
-                 reward_oneback=lag(reward,default=0))
-  
-  model<-glmer(stay ~ reward_oneback+(reward_oneback| subject), 
-               data = merge(df,as.data.frame(true.parameters),by=c('subject')), 
-               family = binomial,
-               control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
-  plot(effect('reward_oneback',model))
-  
-  #plot reward effect on pstay agianst parameters
-  df_plot=cbind(coef(model)$subject,as.data.frame(true.parameters))
-  gridExtra::grid.arrange(
-    ggplot(df_plot,aes(x=alpha,y=reward_oneback ))+geom_point(size=3),
-    ggplot(df_plot,aes(x=beta,y=reward_oneback ))+geom_point(size=3),
-    ggplot(df_plot,aes(x=alpha,y=beta,color=reward_oneback ))+geom_point(size=3),
-    ncol=3
-  )
-  
-
-#sanity check 3: plot mean reward vs parameters
-model<-glmer(reward ~ poly(alpha,2)+beta+(1| subject), 
-             data = merge(df,as.data.frame(true.parameters),by=c('subject')), 
-             family = binomial,
-             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
-plot(effect('alpha',model)) #(if you use uniform alpha and fixed beta - you will be able to see a nice hyperbolic)
-plot(effect('beta',model)) #(if you use uniform alpha - you will be able to see a nice hyperbolic)
 
 
-# prepare stan data ---------------------------------------
+#save-------------------------------------------------------------------
+save(df,file=paste('./data/',model_name,'_',Nsubjects,'subjects_',Nblocks,'blocks_',Ntrials_perblock,'trials_',Narms,'arms_simdata.Rdata',sep=""))
+save(true.parameters,file=paste('./data/',model_name,'_',Nsubjects,'subjects_',Nblocks,'blocks_',Ntrials_perblock,'trials_',Narms,'arms_parameters.Rdata',sep=""))
+
+#convert to standata format-------------------------------------------------
 
 # add abort column to simulate missing trials 
-max_precent_of_aborted_trials=0.1
+max_precent_of_aborted_trials=0
 df$abort<-0
 Nsubjects=max(df$subject)
-Ntrials  =max(df$trial)
+Ntrials  =df%>%group_by(subject)%>%summarise(Ntrials_max=(length(trial)))%>%summarise(max(Ntrials_max))%>%as.numeric()
 
 for (subject in seq(1:max(df$subject))){
   index_abort           =sample(which(df$subject==subject),runif(1,min=0,max=max_precent_of_aborted_trials)*Ntrials)  #index of rows to abort
@@ -128,22 +99,73 @@ df%>%group_by(subject)%>%summarise(mean(abort)) #count and omit aborted trials
 df<-df[df$abort==0,]
 df%>%group_by(subject)%>%summarise(mean(abort))
 
-source('functions/make_mystandata.R')
-df$action        =df$choice
-df$selected_offer=(df$choice==df$offer2)*1+1
+#some housekeeping
+library(dplyr)
 
+df$action        =df$choice
+df$unchosen      =df$offer1
+df$unchosen[df$choice==df$offer1]=df$offer2[df$choice==df$offer1]
+df$selected_offer=(df$choice==df$offer2)*1+1
+df=df%>%mutate(first_trial_in_block=(block!=lag(block,default = 0))*1)%>%as.data.frame()
+df$fold = df$block
+
+#make standata
+source('./functions/make_mystandata.R')
 data_for_stan<-make_mystandata(data=df, 
-                               subject_column      =df$subject,
+                               subject_column     =df$subject,
+                               block_column       =df$block,
                                var_toinclude      =c(
+                                 'fold',
+                                 'first_trial_in_block',
+                                 'trial',
                                  'offer1',
                                  'offer2',
                                  'action',
+                                 'unchosen',
                                  'reward',
                                  'selected_offer'),
                                additional_arguments=list(Narms=4, Nraffle=2))
 
+save(data_for_stan,file=paste('./data/',model_name,'_',Nsubjects,'subjects_',Nblocks,'blocks_',Ntrials_perblock,'trials_',Narms,'arms_standata.Rdata',sep=""))
 
-#save-------------------------------------------------------------------
-save(df,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms.Rdata',sep=""))
-save(data_for_stan,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms_standata.Rdata',sep=""))
-save(true.parameters,file=paste('data/simulation_',Nsubjects,'subjects_',Ntrials,'trials_',Narms,'arms_parameters.Rdata',sep=""))
+
+
+#check simulated data -----------------------------------------------------------
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+library(effects)
+
+#sanity check 1: plot mean reward vs expected value
+model<-glmer(reward ~ expval_ch+(1| subject),data = df, family = binomial)
+plot(effect('expval_ch',model))
+
+
+#sanity check 2: pStay model-agnostic analysis
+df=df%>%mutate(stay=(choice==lag(choice,default=0))*1,
+               reward_oneback=lag(reward,default=0))
+
+model<-glmer(stay ~ reward_oneback+(reward_oneback| subject), 
+             data = merge(df,as.data.frame(true.parameters),by=c('subject')), 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('reward_oneback',model))
+
+#plot reward effect on pstay agianst parameters
+df_plot=cbind(coef(model)$subject,as.data.frame(true.parameters))
+gridExtra::grid.arrange(
+  ggplot(df_plot,aes(x=alpha,y=reward_oneback ))+geom_point(size=3),
+  ggplot(df_plot,aes(x=beta,y=reward_oneback ))+geom_point(size=3),
+  ggplot(df_plot,aes(x=alpha,y=beta,color=reward_oneback ))+geom_point(size=3),
+  ncol=3
+)
+
+
+#sanity check 3: plot mean reward vs parameters
+model<-glmer(reward ~ poly(alpha,2)+beta+(1| subject), 
+             data = merge(df,as.data.frame(true.parameters),by=c('subject')), 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('alpha',model)) #(if you use uniform alpha and fixed beta - you will be able to see a nice hyperbolic)
+plot(effect('beta',model)) #(if you use uniform alpha - you will be able to see a nice hyperbolic)
