@@ -4,9 +4,11 @@
 
 rm(list=ls())
 
+model_name=c('null')
+
 # fit stan model  --------------------------------------------
 library(rstan) 
-load('./data/null_100subjects_4blocks_50trials_4arms_standata.Rdata')
+load('./data/null_standata.Rdata')
 library(parallel)
 detectCores()
 {
@@ -24,9 +26,9 @@ detectCores()
 }
 
 #save
-saveRDS(rl_fit, './data/null_100subjects_4blocks_50trials_4arms_RDSfile.rds')
+saveRDS(rl_fit, paste('./data/',model_name,'_RDSfile.rds',sep=""))
 
 pars <- rstan::extract(rl_fit, permuted = TRUE)
-save(pars, file='./data/null_100subjects_4blocks_50trials_4arms_extracted_parameters.rdata')
+save(pars, file=paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
 
 
