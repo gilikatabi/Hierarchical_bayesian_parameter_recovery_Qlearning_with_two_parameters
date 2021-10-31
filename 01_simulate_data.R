@@ -10,7 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =50   
+Nsubjects           =100   
 Nblocks             =5    
 Ntrials_perblock    =100
 Ntrials             =Nblocks*Ntrials_perblock
@@ -27,7 +27,7 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
 
   #true population level parameters 
   population_phi           =0.3 #population mean of beta distribution from which individual learning rates will be sampled
-  population_lambda        =10  #population total count for beta distribution from which individual learning rates will be samples
+  population_lambda        =5   #population total count for beta distribution from which individual learning rates will be samples
   population_location_beta =1   #population mean for lognormal distribution from which noise parameter will be samples
   population_scale_beta    =0.5 #population sd for lognormal distribution from which noise parameter will be samples
 
@@ -56,7 +56,7 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
   
   
 #-------------------------------------------------------------------------------------------------------------
-# Part B: Simulate data based on task values and individual parameters from previous secion
+# Part B: Simulate data based on task values and individual parameters from previous section
   
 #set some task variables 
 cfg = list(Nblocks         =Nblocks,
