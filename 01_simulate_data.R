@@ -10,7 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =200   
+Nsubjects           =20000   
 Nblocks             =5    
 Ntrials_perblock    =100
 Ntrials             =Nblocks*Ntrials_perblock
@@ -31,7 +31,7 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
   mu_beta    =4
   
   #true unbounded location and scale parameters (alpha between 0 and 1, beta between 0 and beta_upper_limit).
-  beta_upper_limit = 100
+  beta_upper_limit = 1
   mu_aux           =c(qnorm(mu_alpha),qnorm(mu_beta/beta_upper_limit))
   sigma_aux        =c(1,1) 
   
@@ -49,7 +49,7 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
   #individual parameters in natural scale
   
   alpha          = pnorm(mu_aux[1]+ sigma_aux[1]*alpha_individal_aux);
-  beta           = pnorm(  mu_aux[2]+ sigma_aux[2]*beta_indvidial_aux)*10;
+  beta           = pnorm(mu_aux[2]+ sigma_aux[2]*beta_indvidial_aux)*beta_upper_limit;
 
   #check histograms and sample means
   par(mfrow=c(2,2))
