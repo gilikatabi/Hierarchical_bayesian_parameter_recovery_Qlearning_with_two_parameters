@@ -31,13 +31,13 @@ transformed data{
 parameters {
 
   //population level parameters 
-  vector<lower=0>[Nparameters_population_shape]    population_shape1;      //first parameter in beta prior
-  vector<lower=0>[Nparameters_population_shape]    population_shape2;      //second parameter in beta prior
+  vector<lower=0, upper=1>[Nparameters_population_shape] phi;                 //population mean in indvidual level beta priors
+  vector<lower=0.1> [Nparameters_population_shape]       lambda;              //population total count in indvidual level beta priors
 
-  vector         [Nparameters_population_location] population_location;    //location parameter for lognormal             
-  vector<lower=0>[Nparameters_population_scale]    population_scale;       //scale parameter for lognormal      
+  vector[Nparameters_population_location]                population_location; //location parameter for lognormal             
+  vector<lower=0>[Nparameters_population_scale]          population_scale;    //scale parameter for lognormal      
   
-  //individuals level
+  //individuals level parameters
   vector<lower=0,upper=1>[Nsubjects] alpha; //learning-rate
   vector<lower=0>        [Nsubjects] beta;  //noise parameter
 }
@@ -46,15 +46,15 @@ parameters {
 model {
   
   // population level parameters (hyper-parameters)
-  population_shape1   ~ cauchy(0,5);      //first  parameter in beta prior
-  population_shape2   ~ cauchy(0,5);      //second parameter in beta prior
+  phi    ~ beta(2, 1);       // uniform on phi, could drop since this is bulit in in stan
+  lambda ~ pareto(0.1, 1.5);
 
   population_location   ~ normal(0,5);
   population_scale      ~ cauchy(0,5);
   
 
   //indvidual level parameters
-  alpha ~ beta(population_shape1[1],population_shape2[1]); 
+  alpha ~ beta(lambda[1]*phi[1],lambda[1]*(1-phi[1])); 
   beta  ~ lognormal(population_location[1],population_scale[1]);
   
   

@@ -26,16 +26,16 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
 
 
   #true population level parameters 
-  mu_alpha_a1   =2
-  mu_alpha_a2   =3
-  mu_beta       =1
-  scale_beta    =0.5
+  population_phi           =0.3 #population mean of beta distribution from which individual learning rates will be sampled
+  population_lambda        =10  #population total count for beta distribution from which individual learning rates will be samples
+  population_location_beta =1   #population mean for lognormal distribution from which noise parameter will be samples
+  population_scale_beta    =0.5 #population sd for lognormal distribution from which noise parameter will be samples
 
 
   #individual parameters 
   
-  alpha          = rbeta(Nsubjects,mu_alpha_a1,mu_alpha_a2);
-  beta           = rlnorm(Nsubjects,mu_beta,scale_beta)
+  alpha          = rbeta(Nsubjects,population_lambda*population_phi,population_lambda*(1-population_phi));
+  beta           = rlnorm(Nsubjects,population_location_beta,population_scale_beta)
 
   #check histograms and sample means
   par(mfrow=c(2,2))
