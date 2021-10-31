@@ -16,10 +16,10 @@ detectCores()
 
     rl_fit<- stan(file = './models/null.stan', 
                 data=data_for_stan, 
-                iter=2000,
-                warmup = 1000,
-                chains=8,
-                cores =8) 
+                iter=2,
+                warmup = 1,
+                chains=1,
+                cores =1) 
 
   end_time <- Sys.time()
   end_time-start_time

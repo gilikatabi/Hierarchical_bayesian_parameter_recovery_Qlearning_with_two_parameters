@@ -23,50 +23,42 @@ data {
 }
 
 transformed data{
-  int<lower = 1> Nparameters=2;     //number of parameters
-  vector[Narms] Qvalue_initial;     // initial values for Qvalues (defined here to aviod doing this many times across iterations)
-  Qvalue_initial = rep_vector(0.5, Narms);
+  int<lower = 1> Nparameters_population_shape   =1;
+  int<lower = 1> Nparameters_population_location=1;
+  int<lower = 1> Nparameters_population_scale   =1;
 }
 
 parameters {
-// Declare parameters vectors. the notation "aux" indicate that the values are unbounded 
-  
+
   //population level parameters 
-  vector[Nparameters] mu_aux;                    //vector with the population level mean for each model parameter
-  vector<lower=0>[Nparameters] sigma_aux;        //vector of random effects variance for each model parameter
+  vector<lower=0>[Nparameters_population_shape]    population_shape1;      //first parameter in beta prior
+  vector<lower=0>[Nparameters_population_shape]    population_shape2;      //second parameter in beta prior
+
+  vector         [Nparameters_population_location] population_location;    //location parameter for lognormal             
+  vector<lower=0>[Nparameters_population_scale]    population_scale;       //scale parameter for lognormal      
   
   //individuals level
-  vector[Nsubjects] alpha_individal_aux;
-  vector[Nsubjects] beta_indvidial_aux;
+  vector<lower=0,upper=1>[Nsubjects] alpha; //learning-rate
+  vector<lower=0>        [Nsubjects] beta;  //noise parameter
 }
-
-
-transformed parameters {
-//declare variables and parameters
-  real<lower=0,upper=1>  alpha[Nsubjects];
-  real<lower=0>          beta[Nsubjects];
-  
-  #transform parameters from unbonded to natural scale 
-  for (subject in 1:Nsubjects) {
-    alpha[subject]   = Phi_approx(mu_aux[1] + sigma_aux[1] * alpha_individal_aux[subject]);
-    beta[subject]    = exp(       mu_aux[2] + sigma_aux[2] * beta_indvidial_aux[subject]) ;
-  }
-
-}
-
 
 
 model {
   
-  // population level priors (hyper-parameters)
-  mu_aux    ~ normal(0, 1);            
-  sigma_aux ~ normal(0, 0.5);        
+  // population level parameters (hyper-parameters)
+  population_shape1   ~ cauchy(0,5);      //first  parameter in beta prior
+  population_shape2   ~ cauchy(0,5);      //second parameter in beta prior
 
-  // indvidual level priors (subjects' parameters)
-  alpha_individal_aux~ normal(0, 1);
-  beta_indvidial_aux ~ normal(0, 1);
- 
+  population_location   ~ normal(0,5);
+  population_scale      ~ cauchy(0,5);
+  
 
+  //indvidual level parameters
+  alpha ~ beta(population_shape1[1],population_shape2[1]); 
+  beta  ~ lognormal(population_location[1],population_scale[1]);
+  
+  
+  
   //Likelihood function per subject per trial
 
   for (subject in 1:Nsubjects){
@@ -75,10 +67,13 @@ model {
     
  
       for (trial in 1:Ntrials_per_subject[subject]){
+        
+        //reset Qvalues in the start of each block
         if (first_trial_in_block[subject,trial] == 1) {
-                        Qcard=Qvalue_initial;
+                        Qcard= rep_vector(0.5, Narms);
         }
-
+        
+        //allocate Qvalues according to offer
           Qoffer[1]=Qcard[offer1[subject,trial]];
           Qoffer[2]=Qcard[offer2[subject,trial]];
 
@@ -87,17 +82,6 @@ model {
 
         //Qvalues update
         Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);
-
       } 
     }
-}
-
-generated quantities {
-  real  mu_alpha;
-  real  mu_beta;
-
-  //population parameters
-  mu_alpha=Phi_approx(mu_aux[1]);
-  mu_beta =exp(mu_aux[2]);
-
 }

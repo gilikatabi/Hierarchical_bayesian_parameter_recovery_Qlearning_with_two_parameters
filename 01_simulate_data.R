@@ -10,7 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =20000   
+Nsubjects           =50   
 Nblocks             =5    
 Ntrials_perblock    =100
 Ntrials             =Nblocks*Ntrials_perblock
@@ -24,32 +24,18 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
 # Part A: Generate true population and individual level parameters
 
 
-###population location parameters##
-  
+
   #true population level parameters 
-  mu_alpha   =0.5
-  mu_beta    =4
-  
-  #true unbounded location and scale parameters (alpha between 0 and 1, beta between 0 and beta_upper_limit).
-  beta_upper_limit = 1
-  mu_aux           =c(qnorm(mu_alpha),qnorm(mu_beta/beta_upper_limit))
-  sigma_aux        =c(1,1) 
-  
-  #transform location parameters back to natural scale (just for practice!)
-  print(paste(pnorm(mu_aux[1], 0,1),pnorm(mu_aux[2])*beta_upper_limit))
-  
+  mu_alpha_a1   =2
+  mu_alpha_a2   =3
+  mu_beta       =1
+  scale_beta    =0.5
 
 
-###individual level parameters###
+  #individual parameters 
   
-  #random effect for each individual
-  alpha_individal_aux=rnorm(Nsubjects,0, 1);
-  beta_indvidial_aux =rnorm(Nsubjects,0, 1);
-  
-  #individual parameters in natural scale
-  
-  alpha          = pnorm(mu_aux[1]+ sigma_aux[1]*alpha_individal_aux);
-  beta           = pnorm(mu_aux[2]+ sigma_aux[2]*beta_indvidial_aux)*beta_upper_limit;
+  alpha          = rbeta(Nsubjects,mu_alpha_a1,mu_alpha_a2);
+  beta           = rlnorm(Nsubjects,mu_beta,scale_beta)
 
   #check histograms and sample means
   par(mfrow=c(2,2))
