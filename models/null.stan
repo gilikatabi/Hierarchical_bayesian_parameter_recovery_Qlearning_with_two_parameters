@@ -15,47 +15,50 @@ data {
   //the data is padded in make_standata function so that all subjects will have the same number of trials
   int<lower = 0> action[Nsubjects,Ntrials];               //index of which arm was pulled coded 1/2/3/4
   int<lower = 0> reward[Nsubjects,Ntrials];               //reward outcome coded 0 or 1
-  int<lower = 0> offer1[Nsubjects,Ntrials];               //which bandit was included in the first offer
-  int<lower = 0> offer2[Nsubjects,Ntrials];               //which bandit was included in the second offer
+  int<lower = 0> offer1[Nsubjects,Ntrials];               //which bandit was included in the first offer (e.g., left side)
+  int<lower = 0> offer2[Nsubjects,Ntrials];               //which bandit was included in the second offer (e.g., right side)
   int<lower = 0> selected_offer[Nsubjects,Ntrials];       // which offer was selected by the individual
   int<lower = 0> first_trial_in_block[Nsubjects,Ntrials]; //coding whether a trial is the first in a block to allow for Qval rest
   
 }
 
 transformed data{
-  int<lower = 1> Nparameters_population_shape   =1;
-  int<lower = 1> Nparameters_population_location=1;
-  int<lower = 1> Nparameters_population_scale   =1;
+  int<lower = 1> Nparameters=2; //number of parameters in the model
+  
 }
 
 parameters {
 
   //population level parameters 
-  vector<lower=0, upper=1>[Nparameters_population_shape] phi;                 //population mean in indvidual level beta priors
-  vector<lower=0.1> [Nparameters_population_shape]       lambda;              //population total count in indvidual level beta priors
-
-  vector[Nparameters_population_location]                population_location; //location parameter for lognormal             
-  vector<lower=0>[Nparameters_population_scale]          population_scale;    //scale parameter for lognormal      
+  vector         [Nparameters]          population_locations; //a vector with the location parameters for learning rate and noise
+  vector<lower=0>[Nparameters]          population_scales;    //a vector with scaling parameters for learning rate and noise
   
   //individuals level parameters
-  vector<lower=0,upper=1>[Nsubjects] alpha; //learning-rate
-  vector<lower=0>        [Nsubjects] beta;  //noise parameter
+  vector          [Nsubjects]   alpha_random_effect; //random effect for learning rate (alpha is declared in transformed parameters)
+  vector<lower=0> [Nsubjects] beta;                  //noise parameter
+}
+
+
+
+transformed parameters {
+  real  alpha[Nsubjects]; //learning rate parameter
+
+  //transform from unbounded scale to a natural scale of 0 to 1
+  for (subject in 1:Nsubjects) {
+    alpha[subject]   = inv_logit(population_locations[1]  + population_scales[1]  * alpha_random_effect[subject]);//
+  }
 }
 
 
 model {
-  
-  // population level parameters (hyper-parameters)
-  phi    ~ beta(1, 1);       // uniform on phi, could drop since this is bulit in in stan
-  lambda ~ cauchy(0,5);      //pareto(0.1, 1.5);
-
-  population_location   ~ normal(0,2);
-  population_scale      ~ cauchy(0,2);
+  // population level priors 
+  population_locations   ~ normal(0,2);
+  population_scales      ~ cauchy(0,2);
   
 
-  //indvidual level parameters
-  alpha ~ beta(lambda[1]*phi[1],lambda[1]*(1-phi[1])); 
-  beta  ~ lognormal(population_location[1],population_scale[1]);
+  //indvidual level priors
+  alpha_random_effect ~ normal(0,1); 
+  beta  ~ lognormal(population_locations[1],population_scales[1]);
   
   
   
