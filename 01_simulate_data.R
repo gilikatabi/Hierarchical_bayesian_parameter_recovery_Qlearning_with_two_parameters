@@ -10,9 +10,9 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =100   
-Nblocks             =5    
-Ntrials_perblock    =100
+Nsubjects           =200   
+Nblocks             =2    
+Ntrials_perblock    =500
 Ntrials             =Nblocks*Ntrials_perblock
 rndwlk              =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials_perblock]
 Narms               =4  #this is the number of overall bandits in the task

@@ -46,11 +46,11 @@ parameters {
 model {
   
   // population level parameters (hyper-parameters)
-  phi    ~ beta(1, 2);       // uniform on phi, could drop since this is bulit in in stan
+  phi    ~ beta(1, 1);       // uniform on phi, could drop since this is bulit in in stan
   lambda ~ cauchy(0,5);      //pareto(0.1, 1.5);
 
-  population_location   ~ normal(0,5);
-  population_scale      ~ cauchy(0,10);
+  population_location   ~ normal(0,2);
+  population_scale      ~ cauchy(0,2);
   
 
   //indvidual level parameters
