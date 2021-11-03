@@ -80,34 +80,25 @@ save(df,file=paste('./data/',model_name,'_simdata.Rdata',sep=""))
 
 #-------------------------------------------------------------------------------------------------------------
 # Part C: Convert the data to a stan format. 
-# OPTIONAL: Add some random missing data before converting and saving to stan format.
 
 ###adding missing data###
+# OPTIONAL: Add some random missing data before converting and saving to stan format.
+# you can also skip this if no missing data is required
 
 # the percentage of missing data for each individual will be sampled from a uniform 
 # distribution from 0 up to "max_precent_of_aborted_trials" which will be the upper limit of that distribution.
 # we can set max_precent_of_aborted_trials=0 to have no missing data.
-# the 'make_standdata' function is using padding to technically handle missing data.
+# the 'make_standdata' function is using padding to technically ignore missing data.
 
-  #set the maximum percent of missing data per individual for the sample
-  max_precent_of_aborted_trials=0
+source('./functions/add_missingdata.R')
+df=add_missingdata(df,max_precent_of_aborted_trials=0)
 
-  #generate missing data
-  df$abort =0
-  Nsubjects=max(df$subject)
+#check the percent of missing data for each individual
+library(dplyr)  
+df%>%group_by(subject)%>%summarise(mean(abort)) 
 
-  for (subject in seq(1:max(df$subject))){
-    index_abort           =sample(which(df$subject==subject),runif(1,min=0,max=max_precent_of_aborted_trials)*Ntrials)  #index of rows to abort
-    df$abort[index_abort] =1
-  }
-  
-  #check the percent of missing data for each individual
-  library(dplyr)  
-  df%>%group_by(subject)%>%summarise(mean(abort)) 
-
-  #take out missing data trials
-  df<-df[df$abort==0,]
-  
+#take out missing data trials
+df<-df[df$abort==0,]
 
 
 

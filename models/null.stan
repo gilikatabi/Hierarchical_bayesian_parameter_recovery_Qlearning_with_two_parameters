@@ -30,12 +30,12 @@ transformed data{
 parameters {
 
   //population level parameters 
-  vector         [Nparameters]          population_locations; //a vector with the location parameters for learning rate and noise
-  vector<lower=0>[Nparameters]          population_scales;    //a vector with scaling parameters for learning rate and noise
+  vector         [Nparameters] population_locations; //a vector with the location  for learning rate and noise parameters
+  vector<lower=0>[Nparameters] population_scales;    //a vector with scaling for learning rate and noise parameters
   
   //individuals level parameters
-  vector          [Nsubjects]   alpha_random_effect; //random effect for learning rate (alpha is declared in transformed parameters)
-  vector<lower=0> [Nsubjects] beta;                  //noise parameter
+  vector          [Nsubjects] alpha_random_effect; //random effect for learning rate (alpha is declared in transformed parameters)
+  vector<lower=0> [Nsubjects] beta;                //noise parameter
 }
 
 
@@ -58,7 +58,7 @@ model {
 
   //indvidual level priors
   alpha_random_effect ~ normal(0,1); 
-  beta  ~ lognormal(population_locations[1],population_scales[1]);
+  beta  ~ lognormal(population_locations[2],population_scales[2]);
   
   
   
@@ -80,7 +80,7 @@ model {
           Qoffer[1]=Qcard[offer1[subject,trial]];
           Qoffer[2]=Qcard[offer2[subject,trial]];
 
-        //liklihood function
+        //liklihood function according to a softmax policy and subject's choices
          target +=log_softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
 
         //Qvalues update

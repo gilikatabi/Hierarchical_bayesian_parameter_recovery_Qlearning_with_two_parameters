@@ -1,24 +1,28 @@
 #### simulate Rescorla-Wagner block for participant ----
 sim.block = function(subject,parameters,cfg){ 
-  print(paste('subject',subject))
-#pre-allocation
   
-  #set parameters
+  print(paste('subject',subject))
+
+#pre-allocation of variables and parameters
+  
+  #set learning rate and noise parameters
   alpha = parameters['alpha']
   beta  = parameters['beta']
 
   #task variables
   Nblocks            = cfg$Nblocks
   Ntrials_perblock   = cfg$Ntrials_perblock
-  Narms              = cfg$Narms   #number of overall bandits in the task
-  Nraffle            = cfg$Nraffle #number of bandits offered for selection each trial
-  expvalues          = cfg$rndwlk  #bandit's true excpected value
+  Narms              = cfg$Narms            #number of overall bandits in the task
+  Nraffle            = cfg$Nraffle          #number of bandits offered for selection each trial
+  expvalues          = cfg$rndwlk           #bandit's true excpected value
   rownames(expvalues)= c('ev1','ev2','ev3','ev4')
   df                 = data.frame()
-  
+
+#main simulation section where the agent will make choice according to a Qlearning algorithm
+
 for (block in 1:Nblocks){
   
-  #rest and allocate initial value for Qvalues
+  #Block in empirical tasks tend to have new bandits. For this reason we reset Qvallues at the start of each block.
   Qval      = as.matrix(t(rep(0.5,Narms)))
   colnames(Qval)     = sapply(1:Narms, function(n) {paste('Qbandit',n,sep="")})
   
@@ -26,10 +30,13 @@ for (block in 1:Nblocks){
   for (trial in 1:Ntrials_perblock){
 
     #select bandits to be offered to the agent
+    #e.g., if you have 4 bandits (Narms=4) and 2 offers (Nraffle=2)
+    #we first need to select which of the four arms will be offered for the subject's selection 
+    #(e.g., raffle = c(4,1) for an offer of the forth and first bandit in trial t)
     raffle    = sample(1:Narms,Nraffle,prob=rep(1/Narms,Narms)) 
     raffle    = sort(raffle)
     
-    #simulate agent's action
+    #simulate agent's action according to a softmax policy
     p         = exp(beta*Qval[raffle]) / sum(exp(beta*Qval[raffle]))
     action    = sample(raffle,1,prob=p)
     
@@ -61,7 +68,7 @@ for (block in 1:Nblocks){
        
     
     
-    #updating Qvalues
+    #updating Qvalues according to a prediction error signal
     Qval[action] = Qval[action] + alpha*(reward - Qval[action])
   }
 }     
