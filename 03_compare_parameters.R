@@ -29,7 +29,7 @@ p3= ggplot(data.frame(x=pars$population_scales[,1]),aes(x=x))+geom_density(alpha
 
 p4= ggplot(data.frame(x=pars$population_scales[,2]),aes(x=x))+geom_density(alpha = .5,fill="pink")+ 
         geom_vline(xintercept = 0.5 , linetype="dotted",color = "blue", size=1.5)+
-        xlim(0,1)+  xlab(expression(beta['location']))+ theme_classic()
+        xlim(0,1)+  xlab(expression(beta['scale']))+ theme_classic()
 
 
 annotate_figure(ggarrange(p1,p3,p2,p4,nrow=2,ncol=2), 
@@ -48,7 +48,7 @@ p1=ggplot(data.frame(x =true.parameters[,'alpha'], y =apply(pars$alpha, 2, mean)
     
 p2=ggplot(data.frame(x =true.parameters[,'beta'], y =apply(pars$beta, 2, mean)),aes(x=x,y=y))+geom_point()+
     labs(title='',
-         subtitle = paste('r=',round(cor(true.parameters[,'alpha'], apply(pars$alpha, 2, mean)),2)),
+         subtitle = paste('r=',round(cor(true.parameters[,'beta'], apply(pars$beta, 2, mean)),2)),
          x=expression(beta['true']),
          y=expression(beta['recovered']))+ 
     xlim(0,10)+ylim(0,10)+
