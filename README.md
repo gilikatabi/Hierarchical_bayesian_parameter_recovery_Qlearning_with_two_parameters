@@ -37,5 +37,5 @@ Posterior distrbutions for population level parameters (dashed lines are the tru
 
 Individual level correlations between true and recovered parameters (pearson r is also indicated in the upper left corner):
 
-![This is an image](https://github.com/shahar-lab/Qlearning_hierarchical_fitting_with_stan/blob/main/graphics/individual_level_200agents_100trials.jpeg)
+![This is an image](https://github.com/shahar-lab/Qlearning_hierarchical_fitting_with_stan/blob/main/graphics/individual_level_200agents_1000trials.jpeg)
 
