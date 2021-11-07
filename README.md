@@ -1,4 +1,4 @@
-# Qlearning_hierarchical_fitting_with_stan
+# Qlearning hierarchical fitting with stan
 Parameter recovery examples for RL models using stan.
 
 ## 01_simulate_data.R 
