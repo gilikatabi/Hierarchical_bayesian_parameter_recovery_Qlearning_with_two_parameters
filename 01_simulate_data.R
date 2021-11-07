@@ -10,14 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =200 
-Nblocks             =2    
-Ntrials_perblock    =500
-Ntrials             =Nblocks*Ntrials_perblock
-rndwlk              =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials_perblock]
-Narms               =4  #this is the number of overall bandits in the task
-Nraffle             =2  #this is the amount of arms offered for selection each trial
-
+Nsubjects           =1000 
 
 
 #-------------------------------------------------------------------------------------------------------------
@@ -57,11 +50,18 @@ Nraffle             =2  #this is the amount of arms offered for selection each t
 # Part B: Simulate data based on task values and individual parameters from previous section
   
 #set some task variables 
-cfg = list(Nblocks         =Nblocks,
-           Ntrials_perblock=Ntrials_perblock,
-           Narms           =Narms,    
-           Nraffle         =Nraffle,  
-           rndwlk          =rndwlk)
+  Nblocks             =2    
+  Ntrials_perblock    =500
+  Ntrials             =Nblocks*Ntrials_perblock
+  rndwlk              =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials_perblock]
+  Narms               =4  
+  Nraffle             =2  
+  
+cfg = list(Nblocks         =2,
+           Ntrials_perblock=100,
+           Narms           =4,  #number of arms in the task 
+           Nraffle         =2,  #number of arms offered for selection each trial
+           rndwlk          =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F))
 
 #run simulation
 source('./models/simulation_Narmed_bandit_task.R')
