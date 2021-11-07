@@ -50,13 +50,6 @@ Nsubjects           =1000
 # Part B: Simulate data based on task values and individual parameters from previous section
   
 #set some task variables 
-  Nblocks             =2    
-  Ntrials_perblock    =500
-  Ntrials             =Nblocks*Ntrials_perblock
-  rndwlk              =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)[,1:Ntrials_perblock]
-  Narms               =4  
-  Nraffle             =2  
-  
 cfg = list(Nblocks         =2,
            Ntrials_perblock=100,
            Narms           =4,  #number of arms in the task 
@@ -65,10 +58,21 @@ cfg = list(Nblocks         =2,
 
 #run simulation
 source('./models/simulation_Narmed_bandit_task.R')
-df=data.frame()
-for (subject in 1:Nsubjects) {
-  df=rbind(df, sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
-}
+  #windows
+  df=data.frame()
+  for (subject in 1:Nsubjects) {
+    df=rbind(df, sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
+  }
+
+  #linux (e.g., on a vm)
+    # library(parallel)
+    # 
+    # df=mclapply(1:Nsubjects, function(subject) {
+    #   rbind(sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
+    #   },mc.cores=8
+    #   )
+    #
+    # df=do.call(rbind,df)
 
 #save
 save(df,file=paste('./data/',model_name,'_simdata.Rdata',sep=""))
