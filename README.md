@@ -33,14 +33,14 @@ The stam model is located in the 'models'folders.
 Here we plot the recovered and true parameters. Below is the results of a simulation with 200 agents 1000 trials each (4 arms, 2 offers each trial).
 
 ## Results 
-### simulation with 1000agents, 200 trials each
+### simulation with 1000agents, 200 trials each:
 Posterior distrbutions for population level parameters (dashed lines are the true value):
 ![Posterior](https://github.com/shahar-lab/Hierarchical_bayesian_parameter_recovery_Qlearning_with_two_parameters/blob/main/graphics/Population_level_1000agents_2blocks100trialeach.jpeg)
 
 Individual level correlations between true and recovered parameters (pearson r is also indicated in the upper left corner):
 ![This is an image](https://github.com/shahar-lab/Hierarchical_bayesian_parameter_recovery_Qlearning_with_two_parameters/blob/main/graphics/Individual_level_1000agents_2blocks100trialeach.jpeg)
 
-### a simulation with 200agents, 1000 trials each
+### simulation with 200agents, 1000 trials each:
 Posterior distrbutions for population level parameters (dashed lines are the true value):
 ![Posterior](https://github.com/shahar-lab/Hierarchical_bayesian_parameter_recovery_Qlearning_with_two_parameters/blob/main/graphics/population_level_200agents_1000trials.jpeg)
 
