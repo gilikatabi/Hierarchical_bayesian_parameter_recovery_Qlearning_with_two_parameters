@@ -32,10 +32,18 @@ The stam model is located in the 'models'folders.
 ## 03_compare_parameters 
 Here we plot the recovered and true parameters. Below is the results of a simulation with 200 agents 1000 trials each (4 arms, 2 offers each trial).
 
+# Results 
+## a simulation with 200agents, 1000 trials each
 Posterior distrbutions for population level parameters (dashed lines are the true value):
 ![Posterior](https://github.com/shahar-lab/Qlearning_hierarchical_fitting_with_stan/blob/main/graphics/population_level_200agents_1000trials.jpeg)
 
 Individual level correlations between true and recovered parameters (pearson r is also indicated in the upper left corner):
-
 ![This is an image](https://github.com/shahar-lab/Qlearning_hierarchical_fitting_with_stan/blob/main/graphics/individual_level_200agents_1000trials.jpeg)
+
+## simulation with 1000agents, 200 trials each
+Posterior distrbutions for population level parameters (dashed lines are the true value):
+![Posterior](https://github.com/shahar-lab/Hierarchical_bayesian_parameter_recovery_Qlearning_with_two_parameters/blob/main/graphics/Population_level_1000agents_2blocks100trialeach.jpeg)
+
+Individual level correlations between true and recovered parameters (pearson r is also indicated in the upper left corner):
+![This is an image](https://github.com/shahar-lab/Hierarchical_bayesian_parameter_recovery_Qlearning_with_two_parameters/blob/main/graphics/Individual_level_1000agents_2blocks100trialeach.jpeg)
 
