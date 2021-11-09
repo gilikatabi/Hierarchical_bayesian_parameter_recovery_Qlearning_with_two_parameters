@@ -7,7 +7,7 @@ df$abort =0
 
 #count the number of subjects
 Nsubjects=max(df$subject)
-Ntrials  =max(df$trials)
+Ntrials  =max(df$trial)
 #for each subject:
 #1. simulate a missing data rate from a uniform distribution [0,max_precent_of_aborted_trials]
 #2. randomly label the 'abort' column to 1 noting that the trial should be considered as missing data
