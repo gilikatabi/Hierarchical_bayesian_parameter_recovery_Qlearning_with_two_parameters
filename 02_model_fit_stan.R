@@ -8,7 +8,7 @@ model_name=c('null')
 
 # fit stan model  --------------------------------------------
 library(rstan) 
-load('./data/null_standata.Rdata')
+load('./data/null_30%_standata.Rdata')
 library(parallel)
 detectCores()
 {
