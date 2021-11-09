@@ -32,7 +32,7 @@ p4= ggplot(data.frame(x=pars$population_scales[,2]),aes(x=x))+geom_density(alpha
         xlim(0,1)+  xlab(expression(beta['scale']))+ theme_classic()
 
 
-annotate_figure(ggarrange(p1,p3,p2,p4,nrow=2,ncol=2), 
+annotate_figure(ggarrange(p1,p2,nrow=1,ncol=2), 
                 top = text_grob("Population Level Parameters (fixed effects)", color = "black", face = "bold", size = 10))
 
 #-------------------------------------------------------------------------------------------------------------
