@@ -35,17 +35,21 @@ parameters {
   
   //individuals level parameters
   vector          [Nsubjects] alpha_random_effect; //random effect for learning rate (alpha is declared in transformed parameters)
-  vector<lower=0> [Nsubjects] beta;                //noise parameter
+  vector<lower=0> [Nsubjects] beta_random_effect;  //noise parameter
 }
 
 
 
 transformed parameters {
-  real  alpha[Nsubjects]; //learning rate parameter
+  vector         [Nsubjects] alpha; //learning rate parameter
+  vector<lower=0>[Nsubjects] beta ; //noise parameter
+
 
   //transform from unbounded scale to a natural scale of 0 to 1
   for (subject in 1:Nsubjects) {
     alpha[subject]   = inv_logit(population_locations[1]  + population_scales[1]  * alpha_random_effect[subject]);//
+    beta [subject]   = exp      (population_locations[2]  + population_scales[2]  * beta_random_effect[subject]);//
+
   }
 }
 
@@ -57,8 +61,8 @@ model {
   
 
   //indvidual level priors
-  alpha_random_effect ~ normal(0,1); 
-  beta  ~ lognormal(population_locations[2],population_scales[2]);
+  alpha_random_effect ~ std_normal();  // similar to ~ normal(0,1)
+  beta_random_effect  ~ std_normal();  // similar to ~ normal(0,1)
   
   
   

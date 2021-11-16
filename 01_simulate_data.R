@@ -10,7 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =1000 
+Nsubjects           =200 
 
 
 #-------------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ Nsubjects           =1000
 
   #individual parameters 
   alpha          = plogis(population_locations[1]+population_scales[1]*rnorm(Nsubjects));
-  beta           = rlnorm(Nsubjects,population_locations[2],population_scales[2])
+  beta           = exp(population_locations[2]+population_scales[2]*rnorm(Nsubjects)); #same as using rlnorm
 
   #check histograms and sample means
   print(paste(plogis(mean(qlogis(alpha))),mean(beta)))
@@ -50,8 +50,8 @@ Nsubjects           =1000
 # Part B: Simulate data based on task values and individual parameters from previous section
   
 #set some task variables 
-cfg = list(Nblocks         =2,
-           Ntrials_perblock=100,
+cfg = list(Nblocks         =4,
+           Ntrials_perblock=50,
            Narms           =4,  #number of arms in the task 
            Nraffle         =2,  #number of arms offered for selection each trial
            rndwlk          =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F))

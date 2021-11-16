@@ -8,7 +8,7 @@ model_name=c('null')
 
 # fit stan model  --------------------------------------------
 library(rstan) 
-load('./data/null_30%_standata.Rdata')
+load('./data/null_standata.Rdata')
 library(parallel)
 detectCores()
 {
@@ -18,8 +18,8 @@ detectCores()
                 data=data_for_stan, 
                 iter=2000,
                 warmup = 1000,
-                chains=6,
-                cores =6) 
+                chains=8,
+                cores =8) 
 
   end_time <- Sys.time()
   end_time-start_time
