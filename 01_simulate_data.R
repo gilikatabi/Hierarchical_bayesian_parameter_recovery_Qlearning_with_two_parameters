@@ -10,7 +10,7 @@ rm(list=ls())
 
 model_name=c('null')
 
-Nsubjects           =200 
+Nsubjects           =50 
 
 
 #-------------------------------------------------------------------------------------------------------------
@@ -19,13 +19,13 @@ Nsubjects           =200
 
 
   #true population level parameters 
-  population_locations    =c(qlogis(0.3),1) #population mean for learning rate and noise parameters
-  population_scales       =c(1,0.5)       #population sd for learning rate and noise parameters
+  population_locations    =c(qlogis(0.3),4) #population mean for learning rate and noise parameters
+  population_scales       =c(1,1)       #population sd for learning rate and noise parameters
 
 
   #individual parameters 
   alpha          = plogis(population_locations[1]+population_scales[1]*rnorm(Nsubjects));
-  beta           = exp(population_locations[2]+population_scales[2]*rnorm(Nsubjects)); #same as using rlnorm
+  beta           =       (population_locations[2]+population_scales[2]*rnorm(Nsubjects)); #same as using rlnorm
 
   #check histograms and sample means
   print(paste(plogis(mean(qlogis(alpha))),mean(beta)))

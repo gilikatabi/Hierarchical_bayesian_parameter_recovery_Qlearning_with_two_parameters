@@ -35,20 +35,20 @@ parameters {
   
   //individuals level parameters
   vector          [Nsubjects] alpha_random_effect; //random effect for learning rate (alpha is declared in transformed parameters)
-  vector<lower=0> [Nsubjects] beta_random_effect;  //noise parameter
+  vector          [Nsubjects] beta_random_effect;  //noise parameter
 }
 
 
 
 transformed parameters {
   vector         [Nsubjects] alpha; //learning rate parameter
-  vector<lower=0>[Nsubjects] beta ; //noise parameter
+  vector         [Nsubjects] beta ; //noise parameter
 
 
   //transform from unbounded scale to a natural scale of 0 to 1
   for (subject in 1:Nsubjects) {
     alpha[subject]   = inv_logit(population_locations[1]  + population_scales[1]  * alpha_random_effect[subject]);//
-    beta [subject]   = exp      (population_locations[2]  + population_scales[2]  * beta_random_effect[subject]);//
+    beta [subject]   =          (population_locations[2]  + population_scales[2]  * beta_random_effect[subject]);//
 
   }
 }
@@ -85,7 +85,8 @@ model {
           Qoffer[2]=Qcard[offer2[subject,trial]];
 
         //liklihood function according to a softmax policy and subject's choices
-         target +=log_softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
+         //target +=log_softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
+         selected_offer[subject, trial] ~ categorical_logit(beta[subject] * Qoffer);
 
         //Qvalues update
         Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);

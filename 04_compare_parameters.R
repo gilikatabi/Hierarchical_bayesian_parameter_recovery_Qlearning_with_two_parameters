@@ -3,34 +3,45 @@
 
 rm(list=ls())
 model_name=c('null')
-
-load(paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
-load(paste('./data/',model_name,'_true_parameters.Rdata',sep=""))
+folder_name=c('')
+load(paste('./data/',folder_name,model_name,'_recovered_parameters.rdata',sep=""))
+load(paste('./data/',folder_name,model_name,'_true_parameters.Rdata',sep=""))
 
 
 library(ggplot2)
 library(ggpubr)
-
+library(bayestestR)
 #-------------------------------------------------------------------------------------------------------------
 # #population level parameters
+source('./functions/my_posteriorplot.R')
 
 
-p1= ggplot(data.frame(x=plogis(pars$population_locations[,1])),aes(x=x))+geom_density(alpha = .5,fill="yellow")+ 
-        geom_vline(xintercept = 0.3, linetype="dotted",color = "blue", size=1.5)+
-        xlim(0,0.6)+xlab(expression(alpha['location']))+ theme_classic()
+p1= my_posteriorplot(x       = plogis(pars$population_locations[,1]),
+                     myxlim  = c(0,1),
+                     my_vline= 0.3, 
+                     myxlab  = expression(alpha['location']),
+                     mycolor = "pink")
 
-p2= ggplot(data.frame(x=pars$population_locations[,2]),aes(x=x))+geom_density(alpha = .5,fill="pink")+ 
-        geom_vline(xintercept = 1, linetype="dotted",color = "blue", size=1.5)+
-        xlim(0,2)+ xlab(expression(beta['location']))+ theme_classic()
 
-p3= ggplot(data.frame(x=pars$population_scales[,1]),aes(x=x))+geom_density(alpha = .5,fill="yellow")+ 
-        geom_vline(xintercept = 1, linetype="dotted",color = "blue", size=1.5)+
-        xlim(0,2)+xlab(expression(alpha['scale']))+ theme_classic()
+p2= my_posteriorplot(x       = pars$population_locations[,2],
+                     myxlim  = c(2,6),
+                     my_vline= 4, 
+                     myxlab  = expression(beta['location']),
+                     mycolor = "pink")
 
-p4= ggplot(data.frame(x=pars$population_scales[,2]),aes(x=x))+geom_density(alpha = .5,fill="pink")+ 
-        geom_vline(xintercept = 0.5 , linetype="dotted",color = "blue", size=1.5)+
-        xlim(0,1)+  xlab(expression(beta['scale']))+ theme_classic()
 
+p3= my_posteriorplot(x       = plogis(pars$population_scales[,1]),
+                     myxlim  = c(0,2),
+                     my_vline= 1, 
+                     myxlab  = expression(alpha['scale']),
+                     mycolor = "yellow")
+
+
+p4= my_posteriorplot(x       = plogis(pars$population_scales[,2]),
+                     myxlim  = c(0,2),
+                     my_vline= 1, 
+                     myxlab  = expression(beta['scale']),
+                     mycolor = "yellow")
 
 annotate_figure(ggarrange(p1,p2,p3,p4,nrow=2,ncol=2), 
                 top = text_grob("Population Level Parameters (fixed effects)", color = "black", face = "bold", size = 10))
