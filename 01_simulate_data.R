@@ -54,7 +54,7 @@ cfg = list(Nblocks         =4,
            Ntrials_perblock=50,
            Narms           =4,  #number of arms in the task 
            Nraffle         =2,  #number of arms offered for selection each trial
-           rndwlk          =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F))
+           rndwlk          =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F)) #CR:maybe you can add a plot of the random walk?
 
 #run simulation
 source('./models/simulation_Narmed_bandit_task.R')
