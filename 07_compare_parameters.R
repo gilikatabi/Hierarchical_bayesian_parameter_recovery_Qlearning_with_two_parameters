@@ -3,9 +3,8 @@
 
 rm(list=ls())
 model_name=c('null')
-folder_name=c('')
-load(paste('./data/',folder_name,model_name,'_recovered_parameters.rdata',sep=""))
-load(paste('./data/',folder_name,model_name,'_true_parameters.Rdata',sep=""))
+load(paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
+load(paste('./data/',model_name,'_true_parameters.Rdata',sep=""))
 
 
 library(ggplot2)
@@ -17,29 +16,29 @@ source('./functions/my_posteriorplot.R')
 
 
 p1= my_posteriorplot(x       = plogis(pars$population_locations[,1]),
-                     myxlim  = c(0,1),
+                     myxlim  = c(0,0.5),
                      my_vline= 0.3, 
                      myxlab  = expression(alpha['location']),
                      mycolor = "pink")
 
 
 p2= my_posteriorplot(x       = pars$population_locations[,2],
-                     myxlim  = c(2,6),
-                     my_vline= 4, 
+                     myxlim  = c(0.5,1.5),
+                     my_vline= 1, 
                      myxlab  = expression(beta['location']),
                      mycolor = "pink")
 
 
-p3= my_posteriorplot(x       = plogis(pars$population_scales[,1]),
-                     myxlim  = c(0,2),
+p3= my_posteriorplot(x       = pars$population_scales[,1],
+                     myxlim  = c(0.5,1.5),
                      my_vline= 1, 
                      myxlab  = expression(alpha['scale']),
                      mycolor = "yellow")
 
 
-p4= my_posteriorplot(x       = plogis(pars$population_scales[,2]),
-                     myxlim  = c(0,2),
-                     my_vline= 1, 
+p4= my_posteriorplot(x       = pars$population_scales[,2],
+                     myxlim  = c(0,1),
+                     my_vline= 0.5, 
                      myxlab  = expression(beta['scale']),
                      mycolor = "yellow")
 

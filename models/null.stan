@@ -47,8 +47,8 @@ transformed parameters {
 
   //transform from unbounded scale to a natural scale of 0 to 1
   for (subject in 1:Nsubjects) {
-    alpha[subject]   = inv_logit(population_locations[1]  + population_scales[1]  * alpha_random_effect[subject]);//
-    beta [subject]   =          (population_locations[2]  + population_scales[2]  * beta_random_effect[subject]);//
+    alpha[subject]   = inv_logit(population_locations[1]  + population_scales[1]  * alpha_random_effect[subject]);
+    beta [subject]   =          (population_locations[2]  + population_scales[2]  * beta_random_effect[subject]);
 
   }
 }
@@ -85,8 +85,7 @@ model {
           Qoffer[2]=Qcard[offer2[subject,trial]];
 
         //liklihood function according to a softmax policy and subject's choices
-         //target +=log_softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
-         selected_offer[subject, trial] ~ categorical_logit(beta[subject] * Qoffer);
+         target +=log_softmax(beta[subject] * Qoffer)[selected_offer[subject, trial]];
 
         //Qvalues update
         Qcard[action[subject,trial]] += alpha[subject] * (reward[subject,trial] - Qcard[action[subject,trial]]);
