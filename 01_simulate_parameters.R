@@ -3,7 +3,7 @@
 rm(list=ls())
 
 # set sample size
-Nsubjects =20 
+Nsubjects =100 
 
 
 #Population level parameters 

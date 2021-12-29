@@ -7,7 +7,7 @@ load('./data/true_parameters.Rdata')
 
 
 #set sample size
-Nsubjects =dim(true.parameters) 
+Nsubjects =dim(true.parameters)[1] 
 
 #set task variables 
 cfg = list(Nblocks         =4,

@@ -9,14 +9,15 @@ detectCores()
 
 #load data
 load('./data/null_standata.Rdata')
+load('./data/my_compiledmodel.rdata')
 
 {
   start_time <- Sys.time()
 
     rl_fit<- sampling(my_compiledmodel, 
                 data=data_for_stan, 
-                iter=1000,
-                warmup = 500,
+                iter=100,
+                warmup = 50,
                 chains=4,
                 cores =4) 
 
