@@ -2,8 +2,8 @@
 
 
 rm(list=ls())
-#model_name=c('null')
-model_name=c('eligibility_depth3')
+model_name=c('null')
+#model_name=c('eligibility_depth3')
 load(paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
 #load(paste('./data/',model_name,'_true_parameters.Rdata',sep=""))
 load(paste('./data/','true_parameters.Rdata',sep=""))
@@ -25,26 +25,26 @@ p1= my_posteriorplot(x       = plogis(pars$population_locations[,1]),
 
 
 p2= my_posteriorplot(x       = pars$population_locations[,2],
-                     myxlim  = c(0.5,1.5),
+                     myxlim  = c(0,1.5),
                      my_vline= 1, 
                      myxlab  = expression(beta['location']),
                      mycolor = "pink")
 
 p3= my_posteriorplot(x       = plogis(pars$population_locations[,3]),
-                     myxlim  = c(0,0.5),
+                     myxlim  = c(0,1.5),
                      my_vline= 0.8, 
                      myxlab  = expression(lambda['location']),
                      mycolor = "pink")
 
 p4= my_posteriorplot(x       = pars$population_scales[,1],
-                     myxlim  = c(0.5,1.5),
+                     myxlim  = c(0,1.5),
                      my_vline= 1, 
                      myxlab  = expression(alpha['scale']),
                      mycolor = "yellow")
 
 
 p5= my_posteriorplot(x       = pars$population_scales[,2],
-                     myxlim  = c(0,1),
+                     myxlim  = c(0,1.5),
                      my_vline= 0.5, 
                      myxlab  = expression(beta['scale']),
                      mycolor = "yellow")

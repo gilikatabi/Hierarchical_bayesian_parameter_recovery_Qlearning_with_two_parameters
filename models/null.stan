@@ -79,7 +79,8 @@ model {
     real PE1;
     real PE2;
     real PE3;
-	  real  Qval[2,4,3]; //number of arms x number of states x number of stages (for a tree of three stages the last stage will have 4 states)
+	  real Qval[2,4,3]; //number of arms x number of states x number of stages (for a tree of three stages the last stage will have 4 states)
+    vector [2]y;
     vector [Ntrials_per_subject[subject]]Qdiff1;
     vector [Ntrials_per_subject[subject]]Qdiff2;
     vector [Ntrials_per_subject[subject]]Qdiff3;
@@ -102,13 +103,21 @@ model {
         	
         //calculate Qvalue in favor of empirical choice
 
-        Qdiff1[trial]=Qval[1,st1,1]-Qval[2,st1,1];
-        Qdiff2[trial]=Qval[1,st2,2]-Qval[2,st2,2];
-        Qdiff3[trial]=Qval[1,st3,3]-Qval[2,st3,3];
+        //Qdiff1[trial]=Qval[1,st1,1]-Qval[2,st1,1];
+        //Qdiff2[trial]=Qval[1,st2,2]-Qval[2,st2,2];
+        //Qdiff3[trial]=Qval[1,st3,3]-Qval[2,st3,3];
+        y = to_vector(Qval[,st1,1]);
+        Qdiff1[trial] = softmax(beta[subject]*y)[ch1];
+        
+        y = to_vector(Qval[,st2,2]);
+        Qdiff2[trial] = softmax(beta[subject]*y)[ch2];
+        
+        y = to_vector(Qval[,st3,3]);
+        Qdiff3[trial] = softmax(beta[subject]*y)[ch3];
         
         //PE
-        PE1=Qval[ch2,st2,2]-Qval[ch1,st1,1];
-        PE2=Qval[ch3,st3,3]-Qval[ch2,st2,2];
+        PE1=Qval[ch2,st2,2] - Qval[ch1,st1,1];
+        PE2=Qval[ch3,st3,3] - Qval[ch2,st2,2];
         PE3=reward[subject,trial]  - Qval[ch3,st3,3];
         
         Qval[ch1,st1,1]=Qval[ch1,st1,1]+alpha[subject]*PE1 + alpha[subject]*lambda[subject]*PE2 + alpha[subject]*(pow(lambda[subject],2))*PE3;
@@ -116,9 +125,13 @@ model {
         Qval[ch3,st3,3]=Qval[ch3,st3,3]+alpha[subject]*PE3;
       }
  	    //softmax (model likelihood) 
-   	  target +=log_softmax(beta[subject] * Qdiff1);
-   		target +=log_softmax(beta[subject] * Qdiff2);
-   	  target +=log_softmax(beta[subject] * Qdiff3);
+   	  //target +=log_softmax(beta[subject] * Qdiff1);
+   		//target +=log_softmax(beta[subject] * Qdiff2);
+   	  //target +=log_softmax(beta[subject] * Qdiff3);
+   	  
+   	  target +=log(Qdiff1);
+   		target +=log(Qdiff2);
+   	  target +=log(Qdiff3);
 	}
 }
 

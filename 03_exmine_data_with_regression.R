@@ -55,10 +55,10 @@ plot(effect('reward_oneback',model))
 
 #sanity check 6: pStay model-agnostic analysis.
 #Show a tendency to stay with the same third choice (if you stay first and second choices) after reward, and switch after unrewarded trials
-df=df%>%mutate(stay_2=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0) & choice3==lag(choice3,default=0))*1)
+df=df%>%mutate(stay_3=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0) & choice3==lag(choice3,default=0))*1)
 
-model<-glmer(stay_2 ~ reward_oneback+(reward_oneback| subject), 
-             data = df%>%filter((stay==1) & (stay_2==1)), 
+model<-glmer(stay_3 ~ reward_oneback+(reward_oneback| subject), 
+             data = df%>%filter(stay==1)%>%filter(stay_2==1), 
              family = binomial,
              control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
 plot(effect('reward_oneback',model))

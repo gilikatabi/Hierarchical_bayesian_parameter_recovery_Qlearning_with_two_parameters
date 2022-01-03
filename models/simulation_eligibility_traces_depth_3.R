@@ -62,9 +62,9 @@ sim.block = function(subject,parameters,cfg){
         expval_ch            = expvalues[-2 + 2*state3 + choice3,trial],
         reward               = reward
       )
-      
+      #browser()
       #add Qvalues
-      dfnew=cbind(dfnew,Qval)
+      #dfnew=cbind(dfnew,Qval)
       
       #add true excpected values
       dfnew=cbind(dfnew,t(t(expvalues)[trial,]))
@@ -88,6 +88,6 @@ sim.block = function(subject,parameters,cfg){
       Qval[choice3, state3, 3] = Qval[choice3, state3, 3] + alpha*PE_3
       
     }
-  }     
+  }
   return (df)
 }

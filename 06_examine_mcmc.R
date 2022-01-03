@@ -1,6 +1,6 @@
 rm(list=ls())
-#model_name=c('null')
-model_name=c('eligibility_depth3')
+model_name=c('null')
+#model_name=c('eligibility_depth3')
 folder_name=c('')
 
 rl_fit=readRDS(paste('./data/',model_name,'_RDSfile.rds',sep=""))
