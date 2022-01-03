@@ -8,7 +8,7 @@ detectCores()
 # fit stan model--------------------------------------------------
 
 #load data
-load('./data/null_standata.Rdata')
+load('./data/standata.Rdata')
 load('./data/my_compiledmodel.rdata')
 
 {
@@ -16,8 +16,8 @@ load('./data/my_compiledmodel.rdata')
 
     rl_fit<- sampling(my_compiledmodel, 
                 data=data_for_stan, 
-                iter=100,
-                warmup = 50,
+                iter=2000,
+                warmup = 1000,
                 chains=4,
                 cores =4) 
 
@@ -26,9 +26,13 @@ load('./data/my_compiledmodel.rdata')
 }
 
 #save
-saveRDS(rl_fit, paste('./data/',model_name,'_RDSfile.rds',sep=""))
+
+#saveRDS(rl_fit, paste('./data/',model_name,'_RDSfile.rds',sep=""))
+saveRDS(rl_fit, paste('./data/','eligibility_depth3','_RDSfile.rds',sep=""))
 
 pars <- rstan::extract(rl_fit, permuted = TRUE)
-save(pars, file=paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
+
+#save(pars, file=paste('./data/',model_name,'_recovered_parameters.rdata',sep=""))
+save(pars, file=paste('./data/','eligibility_depth3','_recovered_parameters.rdata',sep=""))
 
 

@@ -13,8 +13,8 @@ plot(effect('expval_ch',model))
 
 
 #sanity check 2: pStay model-agnostic analysis.
-#Show a tendency to stay with the same bandit after reward, and switch after unrewarded trials
-df=df%>%mutate(stay=(action==lag(action,default=0))*1,
+#Show a tendency to stay with the same first choice after reward, and switch after unrewarded trials
+df=df%>%mutate(stay=(choice1==lag(choice1,default=0))*1,
                reward_oneback=lag(reward,default=0))
 
 model<-glmer(stay ~ reward_oneback+(reward_oneback| subject), 
@@ -23,8 +23,47 @@ model<-glmer(stay ~ reward_oneback+(reward_oneback| subject),
              control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
 plot(effect('reward_oneback',model))
 
+#sanity check 3: pStay model-agnostic analysis.
+#Show a tendency to stay with the same first and second choices after reward, and switch after unrewarded trials
+df=df%>%mutate(stay_2=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0))*1)
 
-#sanity check 3: plot mean reward vs parameters
+model<-glmer(stay_2 ~ reward_oneback+(reward_oneback| subject), 
+             data = df, 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('reward_oneback',model))
+
+#sanity check 4: pStay model-agnostic analysis.
+#Show a tendency to stay with the same choices (1,2,3) after reward, and switch after unrewarded trials
+df=df%>%mutate(stay_3=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0) & choice3==lag(choice3,default=0))*1)
+
+model<-glmer(stay_3 ~ reward_oneback+(reward_oneback| subject), 
+             data = df, 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('reward_oneback',model))
+
+#sanity check 5: pStay model-agnostic analysis.
+#Show a tendency to stay with the same second choice (if you stay first choice) after reward, and switch after unrewarded trials
+df=df%>%mutate(stay_2=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0))*1)
+
+model<-glmer(stay_2 ~ reward_oneback+(reward_oneback| subject), 
+             data = df%>%filter(stay==1), 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('reward_oneback',model))
+
+#sanity check 6: pStay model-agnostic analysis.
+#Show a tendency to stay with the same third choice (if you stay first and second choices) after reward, and switch after unrewarded trials
+df=df%>%mutate(stay_2=(choice1==lag(choice1,default=0) & choice2==lag(choice2,default=0) & choice3==lag(choice3,default=0))*1)
+
+model<-glmer(stay_2 ~ reward_oneback+(reward_oneback| subject), 
+             data = df%>%filter((stay==1) & (stay_2==1)), 
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+plot(effect('reward_oneback',model))
+
+#sanity check 7: plot mean reward vs parameters
 model<-glm(reward ~ poly(alpha,2)+beta, 
            data = merge(df,as.data.frame(true.parameters),by=c('subject')), 
            family = binomial)

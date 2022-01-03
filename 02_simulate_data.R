@@ -10,18 +10,21 @@ load('./data/true_parameters.Rdata')
 Nsubjects =dim(true.parameters)[1] 
 
 #set task variables 
-cfg = list(Nblocks         =4,
-           Ntrials_perblock=50,
-           Narms           =4,  #number of arms in the task 
-           Nraffle         =2,  #number of arms offered for selection each trial
-           rndwlk          =read.csv('./functions/rndwlk_4frc_1000trials.csv',header=F))
+cfg = list(Nstages         = 3,
+           Nblocks         = 2,
+           Ntrials_perblock= 100,
+           Narms           = 2,  #number of arms in the task 
+           Nstates         = 4,
+           rndwlk          = read.csv('./functions/rndwlk_depth3_100trials.csv',header=F))
 
 #run simulation
-source('./models/simulation_Narmed_bandit_task.R')
+source('./models/simulation_eligibility_traces_depth_3.R')
 
 df=data.frame()
 for (subject in 1:Nsubjects) {
-  df=rbind(df, sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
+  df = rbind(df, sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
+  
+  #df=rbind(df, sim.block(subject=subject, parameters=true.parameters[subject,],cfg=cfg))
 }
 
 #save
@@ -37,12 +40,14 @@ data_for_stan<-make_mystandata(data=df,
                                var_toinclude      =c(
                                  'first_trial_in_block',
                                  'trial',
-                                 'offer1',
-                                 'offer2',
-                                 'action',
-                                 'reward',
-                                 'selected_offer'),
-                               additional_arguments=list(Narms=4, Nraffle=2))
+                                 'state1',
+                                 'state2',
+                                 'state3',
+                                 'choice1',
+                                 'choice2',
+                                 'choice3',
+                                 'reward'),
+                               additional_arguments=list(Nstages=3,Nstates=4))
 
 save(data_for_stan,file='./data/standata.Rdata')
 
