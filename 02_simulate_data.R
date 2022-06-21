@@ -32,7 +32,7 @@ save(df,file='./data/simdata.Rdata')
 
 
 ###convert to a standata format ###----------------------------------------------------------------------------------
-  
+load('./data/simdata.Rdata')
 source('./functions/make_mystandata.R')
 data_for_stan<-make_mystandata(data=df, 
                                subject_column     =df$subject,

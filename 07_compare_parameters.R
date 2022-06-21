@@ -25,8 +25,8 @@ p1= my_posteriorplot(x       = plogis(pars$population_locations[,1]),
 
 
 p2= my_posteriorplot(x       = pars$population_locations[,2],
-                     myxlim  = c(0,1.5),
-                     my_vline= 1, 
+                     myxlim  = c(0,6),
+                     my_vline= 4, 
                      myxlab  = expression(beta['location']),
                      mycolor = "pink")
 
@@ -44,8 +44,8 @@ p4= my_posteriorplot(x       = pars$population_scales[,1],
 
 
 p5= my_posteriorplot(x       = pars$population_scales[,2],
-                     myxlim  = c(0,1.5),
-                     my_vline= 0.5, 
+                     myxlim  = c(0,2),
+                     my_vline= 1.5, 
                      myxlab  = expression(beta['scale']),
                      mycolor = "yellow")
 
@@ -57,7 +57,9 @@ p6= my_posteriorplot(x       = pars$population_scales[,3],
 
 annotate_figure(ggarrange(p1,p2,p3,p4,p5,p6,nrow=2,ncol=3), 
                 top = text_grob("Population Level Parameters (fixed effects)", color = "black", face = "bold", size = 10))
-
+apply(pars$alpha, 2,mean)
+apply(pars$beta, 2,mean)
+apply(pars$lambda, 2,mean)
 #-------------------------------------------------------------------------------------------------------------
 # individual level parameters
 
